@@ -1,6 +1,6 @@
 # Ballot Path Oregon
 
-A free planning guide for people thinking about running for office in Oregon. Enter an address to see every office on your ballot, from precinct committeeperson to U.S. Senate. Pick one and get a dated, step-by-step plan covering eligibility, filing, campaign finance, the voters' pamphlet, campaigning, door knocking, and Election Day.
+A free planning guide for people thinking about running for office in Oregon. Enter an address to see every office on your ballot, from precinct committeeperson to U.S. Senate. Pick one and get a dated, step-by-step plan covering eligibility, filing, campaign finance, the voters' pamphlet, campaigning, door knocking, and Election Day. The plan suggests a campaign mix for the office (door knocking, mail, radio, TV, party coordination, and more), and the candidate can add or drop any of it.
 
 It's a single web page with no server, accounts, or tracking. Everything a person enters (address, answers, checklist progress, voter files) stays in their own browser.
 

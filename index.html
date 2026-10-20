@@ -507,6 +507,19 @@ tr.click:hover td{background:var(--sunk)}
 .task-body ul.tips{margin-top:8px}
 .tip-cite{display:inline-block;font-size:12px;color:var(--muted);margin-left:4px}
 ul.opts{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:8px}
+/* Campaign mix: tactic toggles grouped by how common they are for the office. */
+.tac-group{margin:12px 0 0}
+.tac-group h4{font-size:13px;margin:0 0 6px;display:flex;gap:8px;align-items:baseline}
+.tac-group h4 .note{font-weight:400}
+.tacs{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.tac{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;width:100%;text-align:left;appearance:none;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:8px 10px;cursor:pointer}
+.tac:hover{border-color:var(--fir)}
+.tac .box{width:18px;height:18px;border:1.5px solid var(--rule);border-radius:4px;display:grid;place-items:center;margin-top:1px;font-size:12px;line-height:1}
+.tac[aria-pressed="true"]{border-color:var(--fir);background:var(--fir-soft)}
+.tac[aria-pressed="true"] .box{background:var(--fir);border-color:var(--fir);color:var(--fir-ink)}
+.tac b{display:block;font-size:14px}
+.tac .why{display:block;font-size:13px;color:var(--muted)}
+.tac .chg{font-family:var(--mono);font-size:11px;margin-left:6px;opacity:.8}
 ul.opts > li{border-left:2px solid var(--rule);padding-left:10px;font-size:14px;line-height:1.45}
 .opt-price{font:500 12px/1.3 var(--mono);background:var(--sunk);padding:1px 6px;border-radius:4px;white-space:normal}
 .tools > summary{color:var(--fir)}
@@ -804,6 +817,10 @@ const LINKS = {
   callhub:['CallHub pricing','https://callhub.io/pricing/'],
   polComms:['Political Comms: P2P texting comparison (Jan. 2026)','https://politicalcomms.com/blog/best-p2p-texting-platforms-campaigns/'],
   fccCalls:['FCC: Rules for political campaign calls and texts','https://www.fcc.gov/rules-political-campaign-calls-and-texts'],
+  usc315:['47 U.S.C. 315 (candidate broadcasts and lowest unit charge)','https://www.law.cornell.edu/uscode/text/47/315'],
+  fecCoord:['FEC: Coordinated communications','https://www.fec.gov/help-candidates-and-committees/candidate-taking-receipts/coordinated-communications/'],
+  ors260005:['ORS 260.005 (definitions, including independent expenditure)','https://oregon.public.law/statutes/ors_260.005'],
+  gpTurf:['GoodParty.org: Turf cutting for candidates','https://goodparty.org/blog/article/turf-cutting'],
   signup:['SignUpGenius pricing','https://www.signupgenius.com/pricing'],
   emerge:['Emerge Oregon Signature Program','https://or.emergeamerica.org/training/signature-program'],
   leadInst:['Leadership Institute: Candidate training','https://leadershipinstitute.org/persona/political-candidate-2'],
@@ -1304,7 +1321,7 @@ function buildPlan(c){
     {}));
   v.push(step('list', 'Get the voter list', `<p>Request it with SEL 510 from the Secretary of State or your county${c.county ? ` (${esc(c.county.n)} County Elections, ${esc(c.county.phone)})` : ''}. From the Secretary of State, the statewide list is $500 and a smaller list is $25 plus 2.5 cents per 100 records, delivered electronically in about 10 business days; counties set their own prices. It includes names, addresses, party, precinct, and voting history, but not phone numbers.</p><p>You’ll sign that you won’t use it for commercial purposes.${c.partyPrimary ? ` Parties can get the statewide list free, so ask your county ${c.party} party first.` : ''}</p>`,
     {forms:['SEL 510'], cite:'ORS 247.945, 247.955; OAR 165-002-0020', links:['sel510','ors247','forms']}));
-  v.push(step('load', 'Load the list and cut turf', `<p>Open the Voters tab and load the file. It stays in this browser and is never uploaded. ${c.partyPrimary ? `Oregon’s primaries are closed, so your universe starts with registered ${c.party} voters.` : 'Everyone registered in the district can vote in this race, so your universe starts with all active voters.'}</p><p><button class="btn small" data-go="voters">Open Voters</button></p>`));
+  if (tacOn(c, 'doors')) v.push(step('load', 'Load the list and cut turf', `<p>Open the Voters tab and load the file. It stays in this browser and is never uploaded. ${c.partyPrimary ? `Oregon’s primaries are closed, so your universe starts with registered ${c.party} voters.` : 'Everyone registered in the district can vote in this race, so your universe starts with all active voters.'}</p><p><button class="btn small" data-go="voters">Open Voters</button></p>`));
   /* 5. Run the campaign (before voter data, which supports the door-knocking it plans) */
   const camp = campaignSteps(c);
   if (camp.length) P.push({n:P.length + 1, title:'Run the campaign', steps:camp});
@@ -1444,7 +1461,7 @@ function regroup(c, P){
   const used = new Set();
   const take = ids => ids.map(id => byId[id]).filter(st => st && !used.has(st.id) && used.add(st.id));
   const G = (id, title, intro, ids) => { const subs = take(ids); if (!subs.length) return []; if (subs.length === 1) return subs; return [{id, title, body:intro, subs, group:true}]; };
-  const fed = c.federal, cyc = c.cyc;
+  const fed = c.federal, cyc = c.cyc, doorsOn = tacOn(c, 'doors');
   const layout = [
     ['Before you decide', take(['reality','household','hours','money','safety','secure'])],
     ['Before you file', [
@@ -1459,12 +1476,13 @@ function regroup(c, P){
       ...take(['sel180'])]],
     ['Voters’ pamphlet', take(['pamphlet'])],
     ['Run the campaign', [
+      ...take(['mix']),
       ...G('g-team', 'Build your team', '<p>Campaigns run on a few reliable people and a steady flow of volunteers. Most local campaigns have no paid staff; this section covers who does what, whether to pay anyone, and how to find and keep volunteers.</p>', ['team','staff','recruit','volunteers']),
       ...G('g-message', 'Message and local media', '<p>Decide what you’ll say, then say it everywhere voters and reporters look.</p>', ['message','photos','press','forums','endorse']),
       ...G('g-online', 'Website and social media', '<p>Voters will search your name. Make sure they find something you wrote.</p>', ['web','digital']),
-      ...G('g-materials', 'Materials', '<p>Everything you print or pay to put in front of voters: flyers, signs, and mail. The disclaimer rule comes first because it applies to all of it.</p>', ['disclaim','lit','signs','mail'])]],
-    ['Voters and door knocking', [
-      ...G('g-canvass', 'Plan and knock doors', '<p>Set a vote goal, get the voter list, cut it into walkable turf, and reach the voters who matter most before ballots arrive.</p>', ['votegoal','list','load','doors'])]],
+      ...G('g-materials', 'Materials and ads', '<p>Everything you print or pay to put in front of voters: flyers, signs, mail, and any radio or TV. The disclaimer rule comes first because it applies to all of it.</p>', ['disclaim','lit','signs','mail','radio','tv'])]],
+    [doorsOn ? 'Voters and door knocking' : 'Voters and field', [
+      ...G('g-canvass', doorsOn ? 'Plan and knock doors' : 'Plan your voter contact', doorsOn ? '<p>Set a vote goal, get the voter list, cut it into walkable turf, and reach the voters who matter most before ballots arrive.</p>' : '<p>Set a vote goal, get the voter data, and make sure the field program reaches the voters who matter most before ballots arrive.</p>', ['votegoal','list','load','doors','coord','phones'])]],
     ['Election and after', [
       ...G('g-gotv', 'Get out the vote', '<p>Oregon votes by mail, so the election is really a two- to three-week window, not one day.</p>', ['gotv','eday','count']),
       ...G('g-after', 'After the election', '<p>Results, reporting, and what comes next.</p>', ['ifwin','after'])]],
@@ -1659,17 +1677,25 @@ function guideFor(c){
    tools: toolList([
      {p:'any', n:'Secretary of State voter list + this app', price:'From $25', d:'The public list (no phone numbers), loaded into the Voters tab to cut turf and track doors. Nothing is uploaded.', src:['sel510']},
      {p:'any', n:'GoodParty.org Pro', price:'$10/month', d:'Registered voters in your race with voting history and contact information, routed walk lists, phone banking, and texting (first 5,000 texts free, then $0.035 each). Built for independent and nonpartisan candidates.', src:['goodparty']},
-     {p:'any', n:'Ecanvasser', price:'Listed from $99/month (page also shows $299)', d:'Canvassing app and map for any organization. Its page lists conflicting prices, so confirm. 7-day trial.', src:['ecanvasser']},
      {p:'DEM', n:'VAN (VoteBuilder) and MiniVAN through the Democratic Party of Oregon', price:'Set by your county party', d:'Local candidates get county party approval, pay the county’s price (plus 4% by card), sign the party agreement, and report the access as an in-kind contribution from the party. Legislative, statewide, and Metro candidates contact the state party.', src:['dpoVan']},
      {p:'REP', n:'Republican voter data through your county or state party', d:'Ask the Oregon Republican Party or your county party about access to the party’s voter data and walk app.'},
-     {p:'REP', n:'CampaignSidekick', price:'From $99/user/month', d:'Canvassing and voter-contact software whose features are designed for Republican campaigns.', src:['sidekick']},
-   ], c, 'Options and tools: voter data and canvassing apps')},
+   ], c, 'Options and tools: voter data')},
 
   {to:['doors'],
+   tools: `<p><b>Cutting turf:</b> a walk list should be a stretch of doors one pair can finish in a shift (roughly 40 to 60 in town, fewer in the country), kept to one neighborhood, with no busy roads to cross. Map-based apps let you draw turf on a map and send it to volunteers’ phones. This app’s Voters tab cuts it by precinct and street instead, one side of the street at a time. Which apps you can use depends on your party: party apps come with the party’s voter file and are only for its candidates, while the rest work for anyone. <span class="tip-cite">${link('gpTurf')}</span></p>` + toolList([
+     {p:'any', n:'This app’s Voters tab', price:'Free (plus the $25+ voter list)', d:'Cuts walk lists from the public voter list in walking order and tracks every door. No map or GPS routing; use it on a phone or print the lists. Nothing is uploaded, and any candidate can use it.', src:['sel510']},
+     {p:'any', n:'GoodParty.org Pro', price:'$10/month', d:'Routed walk lists from its own voter data, plus door, phone, and text tools. Built for independent and nonpartisan candidates.', src:['goodparty']},
+     {p:'any', n:'Ecanvasser', price:'Listed from $99/month (page also shows $299)', d:'Canvassing app with map-based turf cutting for any organization. Its page lists conflicting prices, so confirm. 7-day trial.', src:['ecanvasser']},
+     {p:'DEM', n:'VAN Turf Cutter and MiniVAN', price:'Comes with VAN access', d:'Draw turf on a map in VAN and send it to volunteers’ phones in MiniVAN; results sync back to the party file. Access goes through your county party (see Get the voter list). In a nonpartisan race, ask the county party whether you qualify.', src:['dpoVan']},
+     {p:'DEM', n:'Reach', price:'Ask for pricing', d:'Canvassing and relational organizing app used by Democratic and progressive campaigns; connects to VAN.'},
+     {p:'REP', n:'Your Republican county or state party’s walk app', d:'Ask the Oregon Republican Party or your county party which walk app comes with access to the party’s voter data.'},
+     {p:'REP', n:'i360 Grassroots (formerly i360 Walk)', price:'Ask for pricing', d:'Canvassing app with turf assignments that works offline, built on i360’s voter data and used by Republican and conservative campaigns.'},
+     {p:'REP', n:'CampaignSidekick', price:'From $99/user/month', d:'Canvassing and voter-contact software whose features are designed for Republican campaigns.', src:['sidekick']},
+   ], c, 'Options and tools: turf cutting and walk apps'),
    how:`<p><b>Who to visit first:</b> voters who usually vote in this kind of election (the list’s voting history shows it), then those who vote sometimes. ${c.kind === 'partisan' && c.etype === 'primary' ? 'In a closed primary, only your party’s voters.' : ''}</p><p><b>A shift:</b> two to three hours, in pairs, with a printed or app-based list, walk pieces, a pen, and water. As a rough guide (an estimate, not a measured figure), expect 15 to 25 doors an hour in town and fewer in rural areas, and someone answers at a minority of doors.</p><p><b>At the door:</b> “Hi, I’m [name], I’m running for [office]. What’s the biggest issue for you here?” Listen, connect it to one priority, and ask, “Can I count on your vote?” Mark each voter: strong yes, lean yes, undecided, lean no, no, or not home. Come back to undecideds before ballots go out.</p>`},
 
   /* ---- Turnout ---- */
-  {to:['gotv'],
+  {to:['phones','gotv'],
    how:`<p><b>Calls and texts follow federal rules:</b> texts you send by hand don’t need prior consent; autodialed texts and prerecorded calls to cell phones do. Prerecorded calls to landlines are allowed without consent, but no more than three in 30 days to a residential line. Recorded messages must say who’s calling at the start and give a call-back number, and you have to honor “STOP.” <span class="tip-cite">${link('fccCalls')}</span></p><p><b>Texting setup:</b> carriers require political texters to register through Campaign Verify ($95 per two-year cycle), which can take up to two business days, plus the platform’s own registration. Start a few weeks before you need it.</p>`,
    tools: toolList([
      {p:'any', n:'Campaign Verify', price:'$95 per cycle', d:'Required verification for political texting on most platforms. Local committees qualify once registered with a state or local election authority.', src:['campVerify']},
@@ -1737,6 +1763,159 @@ function platformStep(c){
     {links:['actblue','actbluePrice','winred','winredFee','anedot','platforms','irsEin'], verify:'Fees and eligibility are from each platform’s own pages (ActBlue’s eligibility and pricing pages, WinRed’s 2021 fee announcement and 2020 state FAQ, Anedot’s pricing page). They change; check before you sign up.'});
 }
 
+/* ================= Campaign mix: which tactics fit this office =================
+   Each tactic gets a level for the race: exp (usually part of the plan), opt (the candidate's call), no (rarely fits).
+   Expected tactics and optional ones marked on start in the plan; the candidate can add or drop any of them (S.intake.tactics). */
+const TACTICS = [
+  ['doors','Knock doors yourself'],
+  ['coord','Coordinate field with your party and allies'],
+  ['phones','Call and text voters'],
+  ['lit','Flyers and walk pieces'],
+  ['signs','Lawn signs'],
+  ['mail','Direct mail'],
+  ['web','Campaign website'],
+  ['digital','Social media, email, and digital ads'],
+  ['radio','Radio ads'],
+  ['tv','TV and streaming ads'],
+  ['forums','Forums, debates, and questionnaires'],
+];
+function raceClass(o){
+  if (o.statewide) return 'state';
+  if (o.id === 'us_rep') return 'house';
+  if (o.leg) return 'leg';
+  if (['county_comm','county_np','county_judge','da','jp','judge'].includes(o.id)) return 'county';
+  return ['city','school','special','swcd','pcp'].includes(o.id) ? o.id : 'county';
+}
+/* id -> [level, why, on by default (opt only)] */
+function tacticFit(c){
+  const T = c.size ? c.size.tier : 'small', cls = raceClass(c.o), id = identOf(c);
+  const party = c.kind === 'partisan' && c.s.path === 'major', PN = {DEM:'Democratic', REP:'Republican'}[id] || 'party';
+  const sch = cls === 'school', unit = sch ? 'school district' : cls === 'special' ? 'district' : cls === 'swcd' ? 'conservation district' : cls === 'county' ? 'county' : cls === 'city' ? (c.size && c.size.ward ? 'ward' : 'city') : 'district';
+  const noCoord = ['no', 'Local races have no coordinated campaign. Your own volunteers are the field program.'];
+  const noTv = ['no', `Broadcast TV reaches a whole media market, far beyond the ${unit}, and costs more than most races like this raise.${sch ? ' School board candidates almost never run TV.' : ''}`];
+  const F = {
+    state: {
+      doors:['no', 'Statewide candidates rarely knock doors to reach voters. Their time goes to fundraising, media, and events, while the field program runs through the party and allied groups. Knocking a few doors with volunteers still helps morale and makes good photos.'],
+      coord:['exp', party ? `Field work for a statewide nominee usually runs through the ${PN} Party’s coordinated campaign and allied groups.` : 'Without a major party’s coordinated campaign, you build field through endorsing groups and volunteers.'],
+      phones:['exp', 'Calls and texts are how a statewide race reaches voters one at a time.'],
+      lit:['opt', 'For events and volunteers. Other people knock most of the doors.', true],
+      signs:['opt', 'Builds visibility with supporters, but signs can’t cover a state.', true],
+      mail:['exp', 'Mail targeted to likely voters is a core statewide tactic.'],
+      web:['exp', 'Voters, reporters, and donors will look for it.'],
+      digital:['exp', 'Digital ads and email reach voters and raise money statewide.'],
+      radio:['exp', 'Reaches rural Oregon and commuters for less than TV.'],
+      tv:['exp', 'The main way to reach voters across a state: broadcast, cable, and streaming.'],
+      forums:['exp', 'Debates, editorial boards, and endorsement interviews.'],
+    },
+    house: {
+      doors:['opt', 'Candidates knock some doors in key areas, mostly to lead and recruit volunteers. The field program does the volume.', true],
+      coord:['exp', party ? `In November, field usually runs through the ${PN} Party’s coordinated campaign and allied groups.` : 'Without a major party’s coordinated campaign, you build field through endorsing groups and volunteers.'],
+      phones:['exp', 'Calls and texts reach far more voters than doors in a district this size.'],
+      lit:['opt', 'For events and the doors volunteers knock.', true],
+      signs:['opt', 'Builds visibility with supporters.', true],
+      mail:['exp', 'Targeted mail is a core tactic in a congressional race.'],
+      web:['exp', 'Voters, reporters, and donors will look for it.'],
+      digital:['exp', 'Digital ads and email reach voters and raise money.'],
+      radio:['exp', 'Cheaper than TV, especially in rural parts of the district.'],
+      tv:['exp', 'Usually central in a competitive House race. Cable and streaming target the district more closely than broadcast.'],
+      forums:['exp', 'Debates, editorial boards, and endorsement interviews.'],
+    },
+    leg: {
+      doors:['exp', 'Legislative races are won at the door, and candidates commonly knock thousands themselves.'],
+      coord: party ? ['opt', `The ${PN} caucus campaign often helps in competitive seats, with data, staff, and volunteers. Ask early.`, false] : ['opt', 'Without party caucus help, allied groups and endorsers may run their own field.', false],
+      phones:['exp', 'Follow-up calls and texts to voters you missed at the door.'],
+      lit:['exp', 'A walk piece for every door.'],
+      signs:['exp', 'Expected in most legislative races.'],
+      mail:['exp', 'Most legislative campaigns send several targeted pieces.'],
+      web:['exp', 'Voters, reporters, and donors will look for it.'],
+      digital:['exp', 'Social media, email, and small digital ad buys.'],
+      radio:['opt', 'Possible in rural districts where airtime is cheap. Less efficient in the Portland market, where most listeners live outside the district.', false],
+      tv:['opt', 'Cable and streaming ads in competitive seats. Broadcast mostly reaches people outside the district.', false],
+      forums:['exp', 'Candidate forums, questionnaires, and endorsement interviews.'],
+    },
+    county: {
+      doors:['exp', T === 'large' ? 'Still the most persuasive contact. You can’t reach everyone, so focus on precincts where voters turn out for this race.' : 'The most persuasive contact, and in a county this size you can reach a real share of voters yourself.'],
+      coord: c.kind === 'partisan' ? ['opt', 'A county party may help a partisan commission candidate with volunteers and data.', false] : noCoord,
+      phones:['opt', 'Follow-up calls and texts, if you have the volunteers or the budget.', T === 'large'],
+      lit:['exp', 'A walk piece for every door.'],
+      signs:['exp', 'Expected in most county races.'],
+      mail: T === 'tiny' ? ['opt', 'One or two pieces if the budget allows.', true] : ['exp', 'Mail reaches the parts of the county you can’t walk.'],
+      web: T === 'tiny' ? ['opt', 'A simple page gives people somewhere to land when they search your name.', true] : ['exp', 'Voters and reporters will look for it.'],
+      digital: T === 'tiny' ? ['opt', 'A campaign page and posts in local groups.', true] : ['exp', 'Social media, email, and small digital ad buys.'],
+      radio:['opt', T === 'large' ? 'Possible, but most stations reach well beyond the county. Ask for rates and audience.' : 'A local station can cover a rural county for less than you’d think. Ask for rates.', false],
+      tv: T === 'large' ? ['opt', 'Cable or streaming ads in the biggest counties. Broadcast reaches far beyond the county.', false] : noTv,
+      forums:['exp', 'Candidate forums, questionnaires, and newspaper endorsement interviews.'],
+    },
+    city: {
+      doors:['exp', 'The most effective thing you can do in a city race.'],
+      coord: T === 'large' ? ['opt', 'City races are nonpartisan, but unions and endorsing groups often run their own member outreach and canvasses.', false] : noCoord,
+      phones:['opt', 'Follow-up calls and texts, if you have the volunteers.', T === 'large'],
+      lit:['exp', 'A flyer for every door.'],
+      signs: T === 'tiny' ? ['opt', 'Optional in a small race. Doors win more votes per dollar.', true] : ['exp', 'Expected in most city races.'],
+      mail: T === 'large' ? ['exp', 'Mail reaches the parts of the city you can’t walk.'] : ['opt', T === 'tiny' ? 'Every Door Direct Mail is cheap enough for one drop if you have the budget.' : 'A piece or two if the budget allows.', T !== 'tiny'],
+      web: T === 'tiny' ? ['opt', 'A free social page or a $19-a-year site gives people somewhere to land.', false] : ['exp', 'Voters and reporters will look for it.'],
+      digital: T === 'tiny' ? ['opt', 'A campaign page and posts in local groups.', false] : ['exp', 'Social media, email, and small digital ad buys.'],
+      radio: T === 'tiny' ? ['no', `Station audiences are far bigger than the ${unit}.`] : ['opt', 'Only if a local station is cheap and most of its listeners live in the city.', false],
+      tv: T === 'large' ? ['opt', 'Big-city races sometimes run cable or streaming ads.', false] : noTv,
+      forums:['exp', 'Candidate forums, neighborhood association nights, and questionnaires.'],
+    },
+    district: {
+      doors:['exp', sch ? 'The most effective thing you can do. Start with parents and people who vote in May elections.' : 'The most effective way to reach the few voters who decide district races.'],
+      coord: noCoord,
+      phones:['opt', 'Calls and texts to supporters near the end, if you have the volunteers.', false],
+      lit:['exp', 'A flyer for every door.'],
+      signs:['opt', 'Optional. Signs in supporters’ yards help with name recognition.', T !== 'tiny'],
+      mail:['opt', T === 'large' ? 'One or two pieces reach a big district you can’t fully walk.' : 'Usually more than a race like this needs.', T === 'large'],
+      web:['opt', 'A simple page gives people somewhere to land when they search your name.', T !== 'tiny'],
+      digital:['opt', sch ? 'Posts in parent groups and community pages go a long way.' : 'A campaign page and posts in local groups.', true],
+      radio:['opt', `A maybe: only if a local station is cheap and covers mostly your ${unit}. Most ${sch ? 'school board' : 'district'} races don’t need it.`, false],
+      tv: noTv,
+      forums:['exp', sch ? 'Forums run by parent groups, the League of Women Voters, and local papers.' : 'Forums and questionnaires, if groups hold them.'],
+    },
+    swcd: {
+      doors:['opt', 'These seats are often uncontested. A few doors in your zone may be all it takes.', true],
+      coord: noCoord,
+      phones:['opt', 'Rarely needed.', false],
+      lit:['opt', 'A simple flyer if you do knock doors.', true],
+      signs:['opt', 'Rarely needed.', false],
+      mail:['opt', 'Rarely needed.', false],
+      web:['opt', 'Rarely needed.', false],
+      digital:['opt', 'Posts in local farm and community groups.', true],
+      radio:['no', 'Far more than a race like this needs.'],
+      tv: noTv,
+      forums:['opt', 'Questionnaires from local papers and groups, if any.', true],
+    },
+  };
+  return F[cls === 'school' || cls === 'special' ? 'district' : cls] || F.county;
+}
+function tacDefault(c, id){ const f = tacticFit(c)[id]; return !!f && (f[0] === 'exp' || (f[0] === 'opt' && !!f[2])); }
+function tacOn(c, id){
+  if (!c.size || c.size.tier === 'none') return true;   // precinct committeeperson: no campaign mix
+  const v = (S.intake.tactics || {})[id];
+  return typeof v === 'boolean' ? v : tacDefault(c, id);
+}
+function mixStep(c){
+  const fit = tacticFit(c), cls = raceClass(c.o), over = S.intake.tactics || {};
+  const lead = {
+    state:'A statewide candidate mostly raises money, does media and events, and coordinates a field program that other people run.',
+    house:'A congressional candidate leans on TV, mail, digital, and a field program run with the party and allies, and knocks doors mainly to lead volunteers.',
+    leg:'Legislative candidates knock doors themselves and add mail, signs, digital, and phones.',
+    county:'County races mix door knocking with mail, signs, and forums, and lean harder on mail as the county gets bigger.',
+    city:'City races are won mostly on foot, with a flyer, signs, and forums, plus mail and digital in bigger cities.',
+    school:'School board races are won at the door and through parent and neighborhood networks. Paid media rarely fits.',
+    special:'District board races are small and low-turnout. Doors and a flyer usually do it.',
+    swcd:'Conservation district races are small and often uncontested. Keep it light.',
+  }[cls] || '';
+  const G = [['exp','Usually part of the plan'],['opt','Your call'],['no','Rarely fits this office']];
+  const li = ([id, label]) => {
+    const on = tacOn(c, id), chg = typeof over[id] === 'boolean' && over[id] !== tacDefault(c, id);
+    return `<li><button class="tac" data-tactic="${id}" aria-pressed="${on}"><span class="box" aria-hidden="true">${on ? '✓' : ''}</span><span><b>${label}${chg ? '<span class="chg">your choice</span>' : ''}</b><span class="why">${fit[id][1]}</span></span></button></li>`;
+  };
+  const groups = G.map(([lv, h]) => { const a = TACTICS.filter(([id]) => fit[id] && fit[id][0] === lv); return a.length ? `<div class="tac-group"><h4>${h} <span class="note">${a.filter(([id]) => tacOn(c, id)).length} of ${a.length} in your plan</span></h4><ul class="tacs">${a.map(li).join('')}</ul></div>` : ''; }).join('');
+  const reset = Object.keys(over).length ? '<p><button class="btn small quiet" data-act="resetTactics">Go back to the usual mix for this office</button></p>' : '';
+  return step('mix', 'Choose how you’ll reach voters', `<p>${lead} Every option stays available: tap one to add it to your plan or take it out. The steps below change to match.</p>${groups}${reset}`, {});
+}
+
 /* Campaign steps, sized to the race. Dates count back from Election Day (E). Ballots are mailed E−20 to E−14 (ORS 254.470). */
 function campaignSteps(c){
   const {s, o, cyc} = c, sz = c.size, T = sz.tier, out = [];
@@ -1744,8 +1923,9 @@ function campaignSteps(c){
   const E = cyc.election, ballots = addDays(E, -20), big = T === 'large', small = T === 'tiny';
   const popTxt = sz.pop ? `About ${n0(sz.pop)} people live in ${esc(sz.where)} (2020 Census)${sz.ward ? ', but council seats here are by ward or district, so your electorate is a fraction of that' : ''}.` : 'We don’t have a population for this seat.';
   const tierTxt = {tiny:'a small race you can win mostly on foot: doors, one flyer, and a few signs', small:'a mid-size race: doors, a simple website, signs, and a piece or two of mail', large:'a large race: you’ll need a budget, regular fundraising, volunteers, and a mail plan'}[T];
-  const over = s.money !== 'under';
+  const over = s.money !== 'under', on = id => tacOn(c, id);
 
+  out.push(mixStep(c));
   out.push(step('budget', 'Set a budget and see what past candidates spent', `<p>${popTxt} That makes this ${tierTxt}.</p><p>Look up who ran for this seat last time in ORESTAR’s public search. Their reports show what they raised and what they spent it on, which is the best budget guide you’ll find.</p><p>Price your biggest items: printing, signs${small ? '' : ', postage'}${big ? ', and any paid digital ads' : ''}.${!c.federal ? ` If the total, including your own money, will pass $1,500, you need a committee and bank account first (see Set up campaign money).` : ''}</p>`,
     {due:cyc.opens && daysTo(cyc.opens) > 0 ? cyc.opens : null, dueLabel:'Before filing opens', links:['orestar']}));
 
@@ -1755,7 +1935,7 @@ function campaignSteps(c){
     out.push(step('houseparty', 'Ask supporters to host a house party', `<p>A supporter invites friends, you speak for ten minutes, and the host makes the ask. It raises money and recruits volunteers from people you haven’t met.</p>`,
       {}));
   }
-  if (!small){
+  if (on('web')){
     out.push(step('web', 'Put up a one-page website', `<p>Your name becomes public when you file, so have something live by then. Keep it to one page:</p><ul><li>A domain with your name in it</li><li>A short bio and photo</li><li>Why you’re running, and three issues at most</li><li>A form to volunteer or get in touch</li><li>A donate link, but only once ${c.federal ? 'your committee is registered with the FEC' : over ? 'your committee and campaign bank account are set up' : 'you’ve set up a committee, since online donations can push you past $1,500 quickly'}</li></ul><p>Add the “Paid for by” line in the footer, if it applies to you (see the step above).</p>`,
       {due:cyc.deadline, dueLabel:'By filing deadline'}));
   }
@@ -1776,7 +1956,7 @@ function campaignSteps(c){
       {due:cyc.deadline, dueLabel:'Suggested', forms: o.officer === 'sos' ? ['SEL 400'] : []}));
   }
 
-  out.push(step('lit', small ? 'Make one flyer to leave at doors' : 'Design your walk piece', `<p>One page: your photo, a sentence on why you’re running, two or three priorities, and your website or contact. Print enough for every door you plan to knock, plus about 20% extra.${small ? ' A simple social media page can stand in for a website in a race this size.' : ''}</p>`,
+  if (on('lit')) out.push(step('lit', small ? 'Make one flyer to leave at doors' : 'Design your walk piece', `<p>One page: your photo, a sentence on why you’re running, two or three priorities, and your website or contact. Print enough for every door you plan to knock, plus about 20% extra.${small ? ' A simple social media page can stand in for a website in a race this size.' : ''}</p>`,
     {due:addDays(ballots, -70), dueLabel:'Suggested', verify:'Suggested date: about 10 weeks before ballots go out, so you have time to knock.'}));
 
   const pre0 = cyc.opens && daysTo(cyc.opens) > 0 ? cyc.opens : null;
@@ -1824,11 +2004,11 @@ function campaignSteps(c){
     <p><b>Other people in your photos:</b> get permission from anyone identifiable in a planned shot, in writing if you’ll use the photo in ads or mail, and a parent’s permission for children.</p>
     <p><b>If a photographer donates the shoot,</b> it’s an in-kind contribution: report it at what the shoot would normally cost.</p>`,
     {due:addDays(cyc.deadline, -21), dueLabel:'Suggested', verify:'Suggested date: in time for your website and, if you buy a statement, the voters’ pamphlet.'}));
-  out.push(step('forums', 'Answer questionnaires and show up at forums', `<p>After the filing deadline, groups start asking candidates for answers: endorsing organizations, local newspapers, neighborhood associations, and the League of Women Voters’ VOTE411 guide. Answer every one that’s public, on time, and in your own words, and keep a document of your answers so they stay consistent. Say yes to candidate forums; in local races they’re one of the few places voters compare candidates side by side.</p>`,
+  if (on('forums')) out.push(step('forums', 'Answer questionnaires and show up at forums', `<p>After the filing deadline, groups start asking candidates for answers: endorsing organizations, local newspapers, neighborhood associations, and the League of Women Voters’ VOTE411 guide. Answer every one that’s public, on time, and in your own words, and keep a document of your answers so they stay consistent. Say yes to candidate forums; in local races they’re one of the few places voters compare candidates side by side.</p>`,
     {due:cyc.deadline, dueLabel:'Starts after filing', links:['vote411']}));
   out.push(step('press', 'Tell local news you’re running', `<p>Send a short announcement with a good photo to local papers, community radio, neighborhood newsletters, and any community group lists you’re on. Say what you’re running for, why, and how to reach you. Small outlets often print it nearly as written.</p>`,
     {due:cyc.deadline, dueLabel:'Around filing'}));
-  if (!small){
+  if (on('digital')){
     out.push(step('digital', 'Set up campaign social media, and ad accounts early', `<p>Make campaign pages separate from your personal accounts and post regularly: events, door-knocking photos, endorsements.</p><p>If you’ll pay for Facebook or Instagram ads, complete Meta’s authorization for ads about elections or politics early, since it requires identity verification. Every ad needs a “Paid for by” disclaimer. For the 2026 midterms, Meta said it would block new political ads in the campaign’s final week, letting only ads that had already run continue; if a rule like that applies to your election, launch everything you’ll need before then. Disclose AI-altered images, video, or audio.</p>`,
       {due:addDays(ballots, -42), dueLabel:'Suggested', links:['metaAds','metaWeek'], verify:'Platform ad rules change each cycle. Check Meta’s and Google’s current political ad policies before you budget for ads.'}));
   }
@@ -1836,15 +2016,44 @@ function campaignSteps(c){
   const cityRule = sr ? `<p><b>${esc(c.city.name)}:</b> ${esc(sr.t)}${sr.pre ? ` Signs can go up ${sr.pre} days before the election (${fmt(addDays(E, -sr.pre))}) and must be down ${sr.post === 0 ? 'once the election is over' : `${sr.post} days after (${fmt(addDays(E, sr.post))})`}.` : ''} <a href="${esc(sr.src)}" target="_blank" rel="noopener">Source</a> <span class="note">(${esc(sr.as)})</span></p>`
     : c.city ? `<p>Ask ${esc(c.city.name)}’s planning or code enforcement office for its sign rules. Most Oregon cities bar signs from the right-of-way, including the planting strip between sidewalk and curb.</p>`
     : `<p>Your city or county sets size, placement, and timing. Most bar signs from the right-of-way, including the planting strip between sidewalk and curb.</p>`;
-  out.push(step('signs', small ? 'Decide whether you need signs' : 'Order signs and learn where they can go', `${small ? '<p>In a small race, signs are optional. Doors win more votes per dollar. If you do get signs, the rules below apply.</p>' : ''}${cityRule}<p><b>Everywhere in Oregon:</b> no signs in state highway right-of-way, which can run from curb to curb in town to 200 feet or more from the pavement in the country. ODOT removes them and holds them for 30 days. Outside city limits, signs also can’t go in county road right-of-way. Always get the property owner’s permission.</p>`,
+  if (on('signs')) out.push(step('signs', small ? 'Decide whether you need signs' : 'Order signs and learn where they can go', `${small ? '<p>In a small race, signs are optional. Doors win more votes per dollar. If you do get signs, the rules below apply.</p>' : ''}${cityRule}<p><b>Everywhere in Oregon:</b> no signs in state highway right-of-way, which can run from curb to curb in town to 200 feet or more from the pavement in the country. ODOT removes them and holds them for 30 days. Outside city limits, signs also can’t go in county road right-of-way. Always get the property owner’s permission.</p>`,
     {due:sr && sr.pre ? addDays(E, -sr.pre) : addDays(ballots, -42), dueLabel: sr && sr.pre ? 'Can go up' : 'Suggested', cite:'ORS 368.942 (county roads)', links:['odotSigns'], verify: sr ? 'City sign codes change. Confirm with the city before you order.' : 'Suggested order date only.'}));
 
-  out.push(step('doors', 'Knock doors before ballots arrive', `<p>Counties mail ballots between ${fmt(ballots)} and ${fmt(addDays(E, -14))}. Plan your door knocking so you’ve reached the voters who matter most by then, and use the weeks after for follow-up and turnout.</p><p>${big ? 'Recruit volunteers and set a weekly door goal. ' : ''}The Voters tab cuts turf and tracks who you’ve talked to.</p><p><button class="btn small" data-go="voters">Open Voters</button></p>`,
+  if (on('doors')) out.push(step('doors', 'Knock doors before ballots arrive', `<p>Counties mail ballots between ${fmt(ballots)} and ${fmt(addDays(E, -14))}. Plan your door knocking so you’ve reached the voters who matter most by then, and use the weeks after for follow-up and turnout.</p><p>${big ? 'Recruit volunteers and set a weekly door goal. ' : ''}The Voters tab cuts turf and tracks who you’ve talked to.</p><p><button class="btn small" data-go="voters">Open Voters</button></p>`,
     {due:ballots, dueLabel:'Ballots go out', cite:'ORS 254.470', links:['ors254']}));
 
-  if (!small){
+  if (on('mail')){
     out.push(step('mail', 'Time your mail to land before ballots', `<p>Mail that arrives after a voter has filled out a ballot is wasted. Aim to have pieces in mailboxes by ${fmt(ballots)}. Ask your printer or mail house for their lead time; plan on at least two weeks for design, printing, and postal processing.</p>${big ? '<p>Larger races often send a second piece timed to land as ballots arrive.</p>' : ''}<p>Every piece needs the “Paid for by” line in at least 10-point type.</p>`,
       {due:addDays(ballots, -21), dueLabel:'Order by (suggested)', verify:'Suggested date. Get the real lead time from your printer.'}));
+  }
+  const party = c.kind === 'partisan' && s.path === 'major';
+  if (on('coord')){
+    out.push(step('coord', 'Coordinate the field program with your party and allies', `<p>${big ? 'In a race this size, most doors and calls are made by a field operation, not by you.' : 'Your own door knocking is still the core, but others can multiply it.'} ${party ? `As the ${c.party} nominee, you’d work with the party’s coordinated campaign${o.leg ? ' or caucus campaign' : ''}, which shares field staff, volunteers, data, and voter contact across the ticket.${c.etype === 'primary' ? ' In a contested primary, parties usually stay out, so build your own field team first and connect with the party once you’re the nominee.' : ''}` : 'Without a major party’s coordinated campaign, your field program comes from your own volunteers and the groups that endorse you.'}</p>
+      <p><b>Your part:</b> agree on target areas and voter goals, share your event calendar, show up to recruit and thank volunteers, and get regular counts of the doors and calls made for you.</p>
+      <p><b>Allies:</b> unions, advocacy groups, and endorsing organizations often run their own member outreach and canvasses. Ask what they’re planning and when.</p>
+      <p><b>Know the coordination line.</b> ${c.federal ? 'Under federal rules, a communication paid for by an outside group, such as a super PAC, that’s coordinated with your campaign counts as an in-kind contribution from that group, subject to limits and reporting.' : 'In Oregon, an independent expenditure is spending done without your campaign’s cooperation or consent. Spending done in cooperation with you is a contribution to your campaign, which you report, and it counts under the contribution limits that start in 2027.'} Don’t share nonpublic plans, polling, or ad strategy with a group that will spend on its own.</p>`,
+      {links: c.federal ? ['fecCoord'] : ['ors260005','cfManual'], verify: c.federal ? null : 'Rules for the 2027 contribution limits are still being written. Ask the Elections Division how coordinated spending will be treated.'}));
+  }
+  if (on('phones')){
+    out.push(step('phones', 'Call and text voters', `<p>Phones reach voters doors can’t: apartment buildings, rural roads, and people who weren’t home. Calls from real volunteers work far better than commercial phone banks or robocalls. Use them to follow up with undecided voters, recruit volunteers, and chase ballots once they’re mailed.</p>
+      <p><b>Where the numbers come from:</b> the Secretary of State’s voter list has no phone numbers. Party voter files, GoodParty.org, and commercial data vendors add matched numbers, and many will be out of date.</p>`,
+      {}));
+  }
+  const fedAd = c.federal ? ' and your spoken statement that you approve the message' : '';
+  if (on('radio')){
+    const cheap = tacticFit(c).radio[0] !== 'exp';
+    out.push(step('radio', cheap ? 'Price radio ads, and buy only if they’re cheap' : 'Plan and book radio ads', `<p>Ask each station that covers your area for its political rate card and how much of its audience lives in ${esc(sz.where || 'your district')}.${cheap ? ' If a week of spots costs more than another round of walk pieces or a mail drop, skip it.' : ''}</p>
+      <p><b>Your rights as a candidate:</b> in the 45 days before a primary and 60 days before a general election, broadcast stations must sell you airtime at their lowest unit charge, the rate their best commercial advertisers pay for the same kind of spot, when you or your voice appears in the ad. If a station sells time to one candidate in your race, it has to offer equal opportunities to the others. ${c.federal ? 'Stations also have to give federal candidates reasonable access to airtime.' : 'Stations must give federal candidates reasonable access, but they can decline to sell time in a state or local race altogether.'} <span class="tip-cite">${link('usc315')}</span></p>
+      <p><b>The ad:</b> 30 or 60 seconds, your name at least three times, one message, and one ask. Ask whether the station will produce it. Include the “Paid for by” statement${fedAd}.</p>
+      <p><b>Book early.</b> Airtime in the weeks before ballots arrive sells out, and stations post political ad purchases in their public files, so opponents can see what you buy.</p>`,
+      {due:addDays(ballots, -42), dueLabel:'Book by (suggested)', links:[c.federal ? 'fecAds' : 'disclaim'], verify:'Suggested date only. Ask each station for its political deadlines.'}));
+  }
+  if (on('tv')){
+    out.push(step('tv', 'Plan TV and streaming ads', `<p>${o.statewide ? 'Oregon’s TV markets are Portland, Eugene, Medford, and Bend, and parts of eastern Oregon watch Boise and Yakima–Tri-Cities stations. ' : ''}Broadcast TV reaches a whole media market, so ${o.statewide ? 'in some markets you also pay to reach Washington, Idaho, or California viewers' : 'you pay to reach many people who can’t vote for you'}. Cable systems sell smaller zones, and streaming (connected TV) ads can be targeted by ZIP code or district, often with lower minimums.</p>
+      <p><b>Rates:</b> in the 45 days before a primary and 60 days before a general election, broadcast stations and cable systems must sell candidates time at their lowest unit charge when the candidate appears in the ad, and offer equal opportunities to opponents. Streaming platforms aren’t covered and set their own political ad rules. <span class="tip-cite">${link('usc315')}</span></p>
+      <p><b>Costs beyond airtime:</b> production (shooting and editing) and usually a media buyer, who is often paid a commission on the buy. ${c.federal ? 'Federal candidates’ TV ads must show you and include your spoken statement approving the message.' : 'Every ad needs the “Paid for by” statement.'}</p>
+      <p><b>Book early, and watch the public files.</b> Stations post political ad buys in their FCC public files, so you can see what opponents are buying, and they can see yours.</p>`,
+      {due:addDays(ballots, -56), dueLabel:'Book by (suggested)', links:[c.federal ? 'fecAds' : 'disclaim'], verify:'Suggested date only. Your media buyer or the stations will give you real deadlines.'}));
   }
   if (!small){
     out.push(step('volunteers', 'Keep volunteers coming back', `<p>Recruiting is the hard part; losing people after one shift wastes it. What keeps volunteers, from research on civic groups and from organizers’ practice:</p>
@@ -1853,10 +2062,10 @@ function campaignSteps(c){
       <p><b>After the election,</b> a thank-you party with food and small prizes is allowed, but don’t announce or advertise it before the election, since that would make it an inducement to volunteer. <span class="tip-cite">${link('hanOrg')} ${link('cfManual')}</span></p>`,
       {}));
   }
-  const ORDER = ['budget','team','staff','recruit','asks','pubemp','disclaim','message','photos','volunteers','web','digital','press','forums','houseparty','endorse','lit','signs','mail','doors'];
+  const ORDER = ['mix','budget','team','staff','recruit','asks','pubemp','disclaim','coord','message','photos','volunteers','web','digital','press','forums','houseparty','endorse','lit','signs','tv','radio','mail','phones','doors'];
   // Chronological: dated steps by their date; undated ones get an anchor date so they land where they belong.
   const start = cyc.opens && daysTo(cyc.opens) > 0 ? cyc.opens : today0();
-  const ANCHOR = {pubemp:start, disclaim:start, staff:start, volunteers:addDays(start, 1), houseparty:addDays(cyc.deadline, 1)};
+  const ANCHOR = {mix:addDays(start, -1), pubemp:start, disclaim:start, staff:start, coord:start, volunteers:addDays(start, 1), houseparty:addDays(cyc.deadline, 1), phones:addDays(ballots, -28)};
   const when = st => +(st.due || ANCHOR[st.id] || start);
   return out.sort((a, b) => when(a) - when(b) || ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
 }
@@ -2560,7 +2769,11 @@ const DO = {
   mail:['Choose Every Door Direct Mail or targeted mail','Get quotes and lead times','Schedule drops to land before ballots'],
   votegoal:['Look up past turnout for this race','Set your win number','Decide who you’ll persuade and who you’ll turn out','Do the contact math'],
   load:['Load the list in the Voters tab','Cut turf'],
-  doors:['Set a weekly door goal','Knock in pairs','Log every conversation'],
+  doors:['Pick a walk app or print lists from the Voters tab','Set a weekly door goal','Knock in pairs','Log every conversation'],
+  coord:['Meet the party or allied field lead','Agree on target areas and goals','Share your event calendar','Get weekly counts of doors and calls'],
+  phones:['Get a list with phone numbers','Set up calling and texting tools','Register with Campaign Verify before texting','Schedule volunteer phone shifts'],
+  radio:['Ask stations for political rate cards','Compare cost with a mail drop','Record the ad with the disclaimer','Book airtime'],
+  tv:['Decide between broadcast, cable, and streaming','Get quotes or hire a media buyer','Produce the ad with the disclaimer','Book airtime early'],
   pamphlet:['Write your statement','Collect endorser consent forms','Prepare a portrait that meets the rules','File and pay before the deadline'],
   gotv:['Ask the county how it shares returned-ballot lists','Contact supporters who haven’t returned ballots','In the final week, tell people to use a drop box'],
   after:['Take signs down','Thank volunteers and donors','File remaining reports'],
@@ -2568,7 +2781,7 @@ const DO = {
 
 /* Split a step body into: warnings (always shown), a one-paragraph summary, tables (shown), tools, and details (collapsed). */
 const tplEl = document.createElement('template');
-const FULLBODY = new Set(['reality','quals','seat','partyreg','navreg']);
+const FULLBODY = new Set(['reality','quals','seat','partyreg','navreg','mix']);
 function anatomy(st){
   tplEl.innerHTML = st.body || '';
   const kids = [...tplEl.content.childNodes].filter(n => n.nodeType === 1 || (n.nodeType === 3 && n.textContent.trim()));
@@ -3079,7 +3292,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.filter){ S.roadFilter = t.dataset.filter; save(); renderRoad(); return; }
   if (t.dataset.scrollto){ S.openTask = t.dataset.scrollto; S.roadFilter = S.done[t.dataset.scrollto] ? 'all' : (S.roadFilter || 'todo'); const ph = buildPlan(ctx()).find(p => p.steps.flatMap(flatSteps).some(x => x.id === t.dataset.scrollto)); if (ph && S.collapsed) S.collapsed[ph.n] = false; save(); renderRoad(); const el = document.getElementById('task-' + t.dataset.scrollto); if (el) el.scrollIntoView({block:'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); return; }
   if (t.dataset.pick){
-    Object.assign(S.intake, {office:t.dataset.pick, seatName:t.dataset.seat || '', county:t.dataset.county || S.intake.county, year:t.dataset.year || '', baseVotes:'', isExample:false, picked:true, distType:'', place:t.dataset.place || '', swcd:t.dataset.swcd || '', sid:t.dataset.sid || '', pos:''});
+    Object.assign(S.intake, {office:t.dataset.pick, seatName:t.dataset.seat || '', county:t.dataset.county || S.intake.county, year:t.dataset.year || '', baseVotes:'', isExample:false, picked:true, distType:'', place:t.dataset.place || '', swcd:t.dataset.swcd || '', sid:t.dataset.sid || '', pos:'', tactics:{}});
     { const qp = (S.quals || {}).party; if (qp === 'DEM' || qp === 'REP') Object.assign(S.intake, {party:qp, path:'major'}); else if (qp === 'NAV') S.intake.path = 'indep'; else if (qp === 'OTH') S.intake.path = 'minor'; }
     S.canvass.parties = null; S.canvass.openTurf = ''; S.setupOpen = true; S.openTask = ''; S.collapsed = {}; save(); return setTab('road');
   }
@@ -3090,6 +3303,13 @@ document.addEventListener('click', async e => {
   if (t.dataset.act === 'endBrowse'){ S.intake.browseCounty = ''; save(); renderFind(); $('#addrIn') && $('#addrIn').focus(); return; }
   if (t.dataset.act === 'unlock'){ S.intake.picked = false; S.intake.manual = true; S.intake.isExample = false; S.setupOpen = true; save(); render(); return; }
   if (t.dataset.act === 'tlAll'){ S.tlAll = !S.tlAll; save(); renderRoad(); return; }
+  if (t.dataset.tactic || t.dataset.act === 'resetTactics'){
+    const id = t.dataset.tactic, tac = Object.assign({}, S.intake.tactics);
+    if (id){ const c = ctx(), next = t.getAttribute('aria-pressed') !== 'true'; if (next === tacDefault(c, id)) delete tac[id]; else tac[id] = next; }
+    S.intake.tactics = id ? tac : {}; S.openTask = 'mix'; save(); renderRoad();
+    (document.querySelector(id ? `[data-tactic="${id}"]` : '#task-mix .task-title'))?.focus({preventScroll:true});
+    return;
+  }
   if (t.dataset.act === 'dlCal' || t.dataset.act === 'dlPlan'){ const c = ctx(), m = $('#dlMsg'); const cal = t.dataset.act === 'dlCal'; if (m) m.textContent = 'Preparing…';
     const slug = String(c.title).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);
     const r = cal ? await offerFile(`ballot-path-${slug}-dates.csv`, calendarCsv(c), 'text/csv') : await offerFile(`ballot-path-${slug}-plan.html`, planHtml(c), 'text/html');
@@ -3155,7 +3375,7 @@ document.addEventListener('change', e => {
   if (t.closest('#setupForm')){
     const k = t.name; if (!(k in S.intake)) return;
     S.intake[k] = t.value; S.intake.isExample = false;
-    if (k === 'office'){ S.intake.year = ''; S.intake.baseVotes = ''; S.intake.seatName = ''; S.intake.place = ''; }
+    if (k === 'office'){ S.intake.year = ''; S.intake.baseVotes = ''; S.intake.seatName = ''; S.intake.place = ''; S.intake.tactics = {}; }
     if (['office','path','incumbent','countyPartisan'].includes(k)) S.intake.year = '';
     if (['office','path','party','countyPartisan','method'].includes(k)){ S.canvass.parties = null; S.canvass.openTurf = ''; }
     save(); render(); return;
