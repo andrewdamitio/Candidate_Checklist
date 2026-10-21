@@ -637,6 +637,7 @@ span.flow-b{cursor:default;opacity:.7}
 .res-txt{display:flex;flex-direction:column;min-width:0;flex:1;gap:1px}
 .res-k{font:600 10px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .res-t{font-size:13.5px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.res-d{font-size:13px;color:var(--muted);line-height:1.4;margin-top:2px}
 .res-m{flex:none;font:500 11.5px var(--mono);color:var(--muted);white-space:nowrap}
 @media (max-width:480px){.res-m{display:none}.todo-res{margin-left:0}}
 .todo-how{margin:4px 0 2px 27px;font-size:13.5px;line-height:1.5}
@@ -1958,7 +1959,9 @@ const TF = t => `<span class="edit">[${t}]</span>`;
 function docShell(title, body){
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>
 body{font:15px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;max-width:780px;margin:24px auto;padding:0 18px;color:#15201A;background:#fff}
-h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:24px 0 6px}h3{font-size:15px;margin:14px 0 4px}p{margin:6px 0}
+h1{font-size:24px;margin:0 0 4px;color:#1F5A43}h2{font-size:18px;margin:24px 0 6px}h3{font-size:15px;margin:14px 0 4px}p{margin:6px 0}
+main{display:block}main:focus{outline:none}
+input.cb{width:16px;height:16px;margin:0 5px 0 0;vertical-align:-3px;accent-color:#1F5A43;cursor:pointer}td input.cb{margin:0}
 .hint{color:#55635A;font-size:13px}.edit{background:#FFF1C2;border-radius:2px;padding:0 2px}
 table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #9AA59E;padding:7px 8px;text-align:left;vertical-align:top;font-size:14px}th{background:#E8EFEA}
 .card{border:1.5px dashed #777;padding:12px 16px;margin:0 0 14px;break-inside:avoid}.ln{border-bottom:1px solid #888;height:28px}
@@ -1966,7 +1969,7 @@ table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #9
 .grid2{display:grid;grid-template-columns:1fr 1fr;border:1px solid #777}.grid2>div{border:1px solid #777;min-height:170px;padding:8px 10px}
 .bar{background:#E8EFEA;border-radius:6px;padding:10px 14px;margin:0 0 18px}
 @media print{.noprint{display:none}body{margin:0;max-width:none}.edit{background:none}.page{break-before:page}}
-</style></head><body><div class="bar noprint"><b>Template from Ballot Path Oregon.</b> Click any text to edit it right here, then print (Ctrl+P or Cmd+P). Highlighted text in [brackets] is yours to fill in. To edit in Word, open this file from Word.</div><main contenteditable="true">${body}</main></body></html>`;
+</style></head><body><div class="bar noprint"><b>Template from Ballot Path Oregon.</b> Click any text to edit it right here, tick the boxes, then print (Ctrl+P or Cmd+P) or save as PDF. Highlighted text in [brackets] is yours to fill in. To edit in Word, open this file from Word.</div><main contenteditable="true">${body.replace(/☐/g, '<input type="checkbox" class="cb" contenteditable="false">')}</main></body></html>`;
 }
 function tplFacts(){
   const on = hasRace(), c = on ? ctx() : null;
@@ -2123,8 +2126,9 @@ const TEMPLATES = [
    build(){ const t = tplFacts();
      const rows = ['Our home address and street','Children’s names, photos, and schools','Workplaces of family members','Family members’ social media accounts','Health, money, and other personal matters','Photos taken inside our home'];
      return docShell('Family privacy agreement', `<h1>Our family’s campaign agreement</h1><p class="hint">Fill this in together before ${t.name}’s name is public. Revisit it if anything changes.</p>
-       <h2>What stays private</h2><table><thead><tr><th style="width:46%">Item</th><th>Private</th><th>OK to share</th><th>Ask first</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r}</td><td>☐</td><td>☐</td><td>☐</td></tr>`).join('')}<tr><td>${TF('Other')}</td><td>☐</td><td>☐</td><td>☐</td></tr></tbody></table>
-       <h2>How family appears in the campaign</h2><p>☐ In photos and mail &nbsp; ☐ At events &nbsp; ☐ Knocking doors &nbsp; ☐ Not at all</p><div class="ln"></div>
+       <h2>What the campaign may use</h2><p>For each item, decide whether the campaign may mention or show it in its own materials: the website, social media, mail, ads, speeches, and interviews. This is about what you choose to put out. Some of it may be public record anyway (a home address on a filing, for example), so pair this with the steps to keep your address off the record and out of people-search sites.</p>
+       <table><thead><tr><th style="width:46%">Item</th><th>Keep out of campaign materials</th><th>OK to use</th><th>Ask the family member each time</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r}</td><td>☐</td><td>☐</td><td>☐</td></tr>`).join('')}<tr><td>${TF('Other')}</td><td>☐</td><td>☐</td><td>☐</td></tr></tbody></table>
+       <h2>How family appears in the campaign</h2><p class="hint">Check everything each person is comfortable with. Write names next to any exceptions.</p><p>☐ In photos, mail, and on the website &nbsp; ☐ In social media posts &nbsp; ☐ At events &nbsp; ☐ Knocking doors &nbsp; ☐ Not at all</p><div class="ln"></div>
        <h2>Protected time</h2><p class="hint">Nights, weekends, or events that stay campaign-free.</p><div class="ln"></div><div class="ln"></div>
        <h2>If something goes wrong</h2><p class="hint">Who to tell, and what we do if someone comes to the door, calls, or posts about the family.</p><div class="ln"></div><div class="ln"></div>
        <p style="margin-top:22px">Signed: <span class="ln" style="display:inline-block;width:60%"></span></p>`); }},
@@ -2254,16 +2258,38 @@ const RES_IC = {
   tab:'<path d="M4 5h16v14H4zM4 9h16"/>',
 };
 const resIcon = k => `<svg class="res-ic" viewBox="0 0 24 24" aria-hidden="true">${RES_IC[k]}</svg>`;
-const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
+const hostOf = u => { try { return new URL(u).hostname.split('.').slice(-2).join('.'); } catch (e) { return ''; } };   // main site only: princeton.edu, oregon.gov
 function resLink(kind, label, title, meta, attrs){
   const inner = `${resIcon(kind)}<span class="res-txt"><span class="res-k">${label}</span><span class="res-t">${title}</span></span><span class="res-m">${meta}</span>`;
   return kind === 'url' ? `<a class="res-link" ${attrs} target="_blank" rel="noopener">${inner}</a>` : `<button type="button" class="res-link" ${attrs}>${inner}</button>`;
 }
 const tplRes = T => resLink('tpl', /-es$/.test(T.id) ? 'Template · En español' : 'Template', esc(T.title), /csv/.test(T.fmt) ? 'Spreadsheet · CSV' : 'Printable page', `data-tpl="${T.id}"`);
 const urlRes = (href, title, label) => resLink('url', label || 'Website', esc(title), esc(hostOf(href)), `href="${esc(href)}"`);
+/* Guides other organizations publish: nonpartisan or official sources only, shown in the steps they help with and on the Learn tab.
+   when(c) limits a guide to the races it fits. Links checked Oct. 21, 2026. */
+const GUIDES = [
+  {title:'Candidate manuals', by:'Oregon Secretary of State', url:'https://sos.oregon.gov/elections/Pages/manuals-tutorials.aspx', steps:['learn','file'], d:'The official rules for filing, by type of office.'},
+  {title:'Campaign Finance Manual', by:'Oregon Secretary of State', url:'https://sos.oregon.gov/elections/Documents/campaign-finance.pdf', steps:['committee','bank','report','limits'], when:c => !c.federal, d:'The official guide to committees, reporting, and what campaign money can pay for.'},
+  {title:'Guides for candidates and committees', by:'Federal Election Commission', url:'https://www.fec.gov/help-candidates-and-committees/guides/', steps:['fec-f1','fec-bank','budget'], when:c => c.federal, d:'The FEC’s official guides for congressional campaigns.'},
+  {title:'So You Want to Run for Local Office', by:'League of Oregon Cities', url:'https://www.eugene-or.gov/DocumentCenter/View/28908/So-You-Want-to-Run-For-Local-Office-League-of-Oregon-Cities', steps:['learn','govt'], when:c => c.o.id === 'city', d:'Written by past League presidents: the role of a city official, city government, and what to check before filing. Copy hosted by the City of Eugene.'},
+  {title:'Guides and handbooks for city officials', by:'League of Oregon Cities', url:'https://www.orcities.org/resources/guides-handbooks', steps:['govt','ifwin'], when:c => c.o.id === 'city', d:'The League’s City Handbook and other guides on how Oregon cities work.'},
+  {title:'Running for a board', by:'Oregon School Boards Association', url:'https://osba.org/running-for-a-board/', steps:['learn','govt'], when:c => c.o.id === 'school', d:'OSBA’s guide for school board candidates, the campaign basics, and the time the job takes.'},
+  {title:'Cybersecurity Campaign Playbook', by:'Harvard Kennedy School, Belfer Center', url:'https://www.belfercenter.org/publication/cybersecurity-campaign-playbook', steps:['secure'], d:'A bipartisan guide written with former Democratic and Republican campaign managers, with checklists for staff and for candidates’ families.'},
+  {title:'Securing political campaigns', by:'U.S. Cybersecurity and Infrastructure Security Agency (CISA)', url:'https://www.cisa.gov/resources-tools/resources/securing-cyber-infrastructure-political-campaigns', steps:['secure'], d:'Free federal guidance on protecting campaign accounts and devices.'},
+  {title:'Toolkit: Countering threats to local officials', by:'Princeton University, Bridging Divides Initiative', url:'https://bridgingdivides.princeton.edu/updates/2026/toolkit-countering-threats-local-officials-during-2026-election-season', steps:['safety'], d:'Nonpartisan research-based steps for handling threats and harassment during election season.'},
+  {title:'Online Harassment Field Manual: protecting information from doxing', by:'PEN America', url:'https://onlineharassmentfieldmanual.pen.org/protecting-information-from-doxing/', steps:['safety','scrub'], d:'Step-by-step help removing personal information and preparing for online harassment.'},
+  {title:'Oregon Government Ethics Law: A Guide for Public Officials', by:'Oregon Government Ethics Commission', url:'https://www.oregon.gov/ogec/pages/guide-for-public-officials.aspx', steps:['ethics','sei'], when:c => !c.federal, d:'The commission’s plain-language summary of conflicts of interest, gifts, and other rules.'},
+  {title:'Public Records and Meetings Manual', by:'Oregon Department of Justice', url:'https://www.doj.state.or.us/oregon-department-of-justice/public-records/attorney-generals-public-records-and-meetings-manual/', steps:['ifwin','ethics'], when:c => c.o.level === 'local', d:'The Attorney General’s guide to Oregon’s public meetings and public records laws, which govern how boards and councils work.'},
+];
+const guideRes = g => urlRes(g.url, g.title, 'Guide · ' + g.by);
+function guidesFor(stepId){
+  const c = hasRace() ? ctx() : null;
+  const G = GUIDES.filter(g => g.steps.includes(stepId) && (!g.when || (c && g.when(c))));
+  return G.length ? `<div class="res-block"><p class="res-h">Guides from other organizations</p><div class="res-list">${G.map(guideRes).join('')}</div></div>` : '';
+}
 function tplButtons(stepId){
   const T = TEMPLATES.filter(x => x.steps.includes(stepId));
-  return T.length ? `<div class="res-block"><p class="res-h">${T.length > 1 ? 'Templates for this step' : 'Template for this step'}</p><div class="res-list">${T.map(tplRes).join('')}</div></div>` : '';
+  return (T.length ? `<div class="res-block"><p class="res-h">${T.length > 1 ? 'Templates for this step' : 'Template for this step'}</p><div class="res-list">${T.map(tplRes).join('')}</div></div>` : '') + guidesFor(stepId);
 }
 async function downloadTpl(id, btn){
   const T = TEMPLATES.find(x => x.id === id); if (!T) return;
@@ -4288,6 +4314,8 @@ function renderLearn(){
     <section class="learn-sec"><h2>How Oregon elections work</h2><div class="primer">${PRIMER.map(([h, b], i) => `<details ${i === 0 ? 'open' : ''}><summary>${h}</summary>${b}</details>`).join('')}</div></section>
     <section class="learn-sec"><h2>Templates</h2><p class="note">${hasRace() ? `Filled in with your race: ${esc(ctx().title)}.` : 'Pick an office first and these fill in with your race’s details.'} Spreadsheets open in Excel or Google Sheets. Printable pages open in your browser, where you can edit the text and print, or open them in Word.</p>
       ${stages.map(sg => `<h3 class="pl-h">${esc(sg)}</h3><div class="tpl-cards">${TEMPLATES.filter(x => x.stage === sg).map(x => `<div class="tpl-card"><h3>${esc(x.title)}</h3><span class="fmt">${esc(x.fmt)}</span><p>${esc(x.d)}</p>${TPL_USE[x.id] ? `<details><summary>How to use it</summary><p>${esc(TPL_USE[x.id])}</p></details>` : ''}<div><button class="btn small" data-tpl="${x.id}">Download</button></div></div>`).join('')}</div>`).join('')}</section>
+    <section class="learn-sec"><h2>Guides from other organizations</h2><p class="note">Official and nonpartisan guides that go deeper than this app. Each also appears in the plan step it helps with.</p>
+      <div class="res-list" style="max-width:none;margin-top:8px">${GUIDES.map(g => guideRes(g).replace('</span></span>', `</span><span class="res-d">${esc(g.d)}</span></span>`)).join('')}</div></section>
     <section class="learn-sec"><h2>Glossary</h2><label class="lab" for="glFilter">Find a term</label><input type="search" id="glFilter" placeholder="e.g. ORESTAR, turf, in-kind" autocomplete="off">
       <dl class="gloss">${GLOSSARY.slice().sort((a, b) => a[0].localeCompare(b[0])).map(([t, d]) => `<div id="gl-${t.toLowerCase().replace(/[^a-z0-9]+/g, '-')}"><dt>${esc(t)}</dt><dd>${esc(d)}</dd></div>`).join('')}</dl>
       <p class="note">Underlined terms in your plan link here. Tap one to see its definition.</p></section>`;
