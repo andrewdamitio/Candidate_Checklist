@@ -2909,7 +2909,7 @@ function eligPanel(A, county, Eall){
   </section>`;
 }
 function entryRow(e){
-  const share = e.share != null && e.share < 99.5 ? `<span class="share ${e.share >= 50 ? 'most' : 'part'}">${e.share < 1 ? '<1' : Math.round(e.share)}% of the county</span>` : '';
+  const share = e.share != null && e.share < 99.5 ? `<span class="share ${e.share >= 50 ? 'most' : 'part'}">${e.share < 1 ? '<1' : Math.round(e.share)}% of ${e.shareOf || 'the county'}</span>` : '';
   const el = e.elig;
   const credC = el && el.ok && el.C.find(c => /^Requires /.test(c));
   const eTag = !el ? '' : !el.ok ? `<span class="elig-tag no">Not eligible: ${esc(el.R.join('; '))}</span>` : credC ? `<span class="elig-tag maybe">${esc(credC)}</span>` : `<span class="elig-tag yes">You meet the listed requirements</span>`;
@@ -3033,20 +3033,21 @@ async function fillStreetList(zip){
 function renderFind(){
   const s = S.intake, zip = (s.zip || '').trim();
   const A = s.addr && s.addr.zip && s.addr.tuple && (s.addr.zip === zip || s.addr.zipNote) ? s.addr : null;
-  const browse = !A && s.browseCounty && GEO.counties[s.browseCounty] ? s.browseCounty : null;
-  const county = A ? A.tuple[0] : browse;
+  const ZM = !A && s.zipMode && s.zipMode === zip && GEO.zips[zip] ? GEO.zips[zip] : null;
+  const browse = !A && !ZM && s.browseCounty && GEO.counties[s.browseCounty] ? s.browseCounty : null;
+  const county = A ? A.tuple[0] : ZM ? (ZM.c.some(x => x[0] === s.county) ? s.county : ZM.c[0][0]) : browse;
   let body = '';
   if (county){
     const k = GEO.counties[county];
     let src;
     if (A){ const t = A.tuple; src = {cd:[[t[3],100]], sd:[[t[2],100]], hd:[[t[1],100]], t:[[t[4] || '',100]], k:[[t[5],100]].concat(t[6] ? [[t[6],100]] : [])}; }
-    else src = GEO.cagg[county];
+    else src = ZM || GEO.cagg[county];
     const Y = ELECTION_YEARS.includes(Number(S.findYear)) ? Number(S.findYear) : 2028;
     const Ebase = findEntries(src, county, !!A);
     const yearCount = y => Ebase.filter(e => upIn(e, y) !== false).length;
     const notUp = [];
     const Eall = Ebase.filter(e => { const u = upIn(e, Y); if (u === false){ notUp.push(e); return false; } return true; }).map(e => {
-      const u = upIn(e, Y), x = Object.assign({}, e, {year:Y, when: typeof e.when === 'number' ? Y : e.when, up:null, unknownUp: u === null, yearTag: u === null ? null : electionLabel(e, Y)});
+      const u = upIn(e, Y), x = Object.assign({}, e, {shareOf: ZM ? 'the ZIP' : 'the county', year:Y, when: typeof e.when === 'number' ? Y : e.when, up:null, unknownUp: u === null, yearTag: u === null ? null : electionLabel(e, Y)});
       if (e.office === 'city' && A && (A.near || A.approx || A.zipNote)) x.note = (A.zipNote ? `Not certain you live in this city: we matched your street in a different ZIP code. Confirm before filing. ` : `Not certain you live inside this city: your address is very close to its boundary. Confirm before filing. `) + (x.note || '');
       if (e.office === 'school' && BOARDS[e.sid]){ const d = BOARDS[e.sid], up = schoolUp(e.sid, Y), other = schoolUp(e.sid, Y + 2);
         x.note = (up ? `Up in ${Y}: ${up.join(', ')}${d.n ? ` (of ${d.n} seats)` : ''}. ` : other ? `Not on file for ${Y}; the seats up in ${Y + 2} are ${other.join(', ')}, so it’s the others. ` : '') + d.how; }
@@ -3063,8 +3064,9 @@ function renderFind(){
     const E = qs && S.onlyEligible ? Eall.filter(e => e.elig.ok) : Eall;
     const t = A && A.tuple;
     body = `
-      <div class="where"><div><p class="eyebrow">${A ? 'Offices for your address' : 'Every office in the county'}</p><h2>${A ? esc(String(A.n) + ' ' + titleCase(A.street)) : esc(k.n) + ' County'}</h2></div>
-        <span class="note">${A ? `ZIP ${esc(A.zip)} · ${A.approx ? `<b>Approximate match:</b> the nearest numbered range is ${n0(A.gap)} numbers away` : 'Matched to a Census address range'}` : `Showing every district in ${esc(k.n)} County. <button class="linkbtn" data-act="endBrowse">Enter your address instead</button>`}</span></div>
+      <div class="where"><div><p class="eyebrow">${A ? 'Offices for your address' : ZM ? 'Offices for your ZIP code' : 'Every office in the county'}</p><h2>${A ? esc(String(A.n) + ' ' + titleCase(A.street)) : ZM ? `ZIP ${esc(zip)}` : esc(k.n) + ' County'}</h2></div>
+        <span class="note">${A ? `ZIP ${esc(A.zip)} · ${A.approx ? `<b>Approximate match:</b> the nearest numbered range is ${n0(A.gap)} numbers away` : 'Matched to a Census address range'}` : ZM ? `${esc(k.n)} County · about ${n0(ZM.p)} residents (2020 Census)` : `Showing every district in ${esc(k.n)} County. <button class="linkbtn" data-act="endBrowse">Enter your address instead</button>`}</span></div>
+      ${ZM ? `<div class="flag amber"><b>A ZIP code can cross district lines.</b> These are all the districts that cover part of ZIP ${esc(zip)}; the percentage shows how many of its residents live in each. To see only the offices at your home, add your street address above.${ZM.c.length > 1 ? `<br><span class="zc">This ZIP is in more than one county. County offices shown for: ${ZM.c.map(([cc, p]) => `<button class="pchip ${cc === county ? 'on' : ''}" data-zc="${cc}" aria-pressed="${cc === county}">${esc(GEO.counties[cc].n)} <em>${p < 1 ? '<1' : Math.round(p)}%</em></button>`).join(' ')}</span>` : ''}</div>` : ''}
       ${A ? `<div class="dchips"><span>${esc(k.n)} County</span><span>House District ${esc(t[1])}</span><span>Senate District ${esc(t[2])}</span><span>Congressional District ${esc(t[3])}</span><span>${t[4] ? esc(GEO.cities[t[4]] || t[4]) : 'Outside city limits'}${A.near || A.approx || A.zipNote ? ' (not certain)' : ''}</span>${t[5] ? `<span>${esc(GEO.schools[t[5]] || t[5])}</span>` : ''}${t[6] ? `<span>${esc(GEO.schools[t[6]] || t[6])}</span>` : ''}</div>` : ''}
       ${A && A.zipNote ? `<div class="flag amber"><b>We matched your street in ZIP ${esc(A.zip)}, not the ZIP you entered.</b> The Census data doesn’t list that street under your ZIP, but a street with the same name and house number is in ${esc(A.zip)}. That can be a different town: in testing, about 1 in 5 matches like this put the address in the wrong city. Check that the city and districts below match your voter registration card, or ask ${esc(k.n)} County Elections (${esc(k.phone)}).</div>` : ''}
       ${A && !A.zipNote && (A.near || A.approx) ? (() => { const here = A.tuple[4] ? (GEO.cities[A.tuple[4]] || 'the city') : null, other = A.nearPlace ? (GEO.cities[A.nearPlace] || 'a city') : null;
@@ -3084,7 +3086,7 @@ function renderFind(){
     const cOpts = Object.entries(GEO.counties).sort((a,b) => a[1].n.localeCompare(b[1].n)).map(([f,k]) => `<option value="${f}">${esc(k.n)}</option>`).join('');
     body = `<section class="find-empty">
       <div class="fe-steps">
-        <div><span class="fe-n">1</span><p><b>Enter your address.</b> We match it to the Census block you live in.</p></div>
+        <div><span class="fe-n">1</span><p><b>Enter your ZIP code.</b> Add your street address to match your exact districts, or leave it blank to see every district in your ZIP.</p></div>
         <div><span class="fe-n">2</span><p><b>See every office on your ballot,</b> from precinct committeeperson to U.S. Senate, grouped local, state, and federal.</p></div>
         <div><span class="fe-n">3</span><p><b>Pick one to plan.</b> Your checklist fills in the forms, fees, and deadlines.</p></div>
       </div>
@@ -3095,13 +3097,13 @@ function renderFind(){
   const found = !!(s.addr && s.addr.tuple && !S.addrEdit);
   $('#view-find').innerHTML = `
     ${flowStrip(hasRace() || found || s.browseCounty ? 'office' : 'address')}
-    ${found ? '' : `<div class="view-head"><div><p class="eyebrow">Start here</p><h1>What can you run for?</h1></div><p>Enter your address to see every office you can run for, from your precinct to Congress.</p></div>`}
+    ${found ? '' : `<div class="view-head"><div><p class="eyebrow">Start here</p><h1>What can you run for?</h1></div><p>Enter your ZIP code to see every office you can run for, from your precinct to Congress. Add your street address for an exact match.</p></div>`}
     ${found ? `<div class="panel addr-bar"><span class="note">Your address</span><b>${esc(s.addrQ || '')}</b><span class="note">ZIP ${esc(zip)}</span><button class="linkbtn" data-act="editAddr">Change address</button></div>` : ''}
     <form class="panel find-in" id="findForm" onsubmit="return false" ${found ? 'hidden' : ''}>
-      <div class="fi-addr"><label class="lab" for="addrIn">Street address</label><input type="text" id="addrIn" list="streetList" autocomplete="street-address" value="${esc(s.addrQ || '')}" placeholder="1234 NE Alder St"><datalist id="streetList"></datalist></div>
+      <div class="fi-addr"><label class="lab" for="addrIn">Street address <span class="note">(optional)</span></label><input type="text" id="addrIn" list="streetList" autocomplete="street-address" value="${esc(s.addrQ || '')}" placeholder="1234 NE Alder St"><datalist id="streetList"></datalist></div>
       <div><label class="lab" for="zipIn">ZIP code</label><input type="text" class="zipbox" id="zipIn" inputmode="numeric" maxlength="5" autocomplete="postal-code" value="${esc(zip)}" placeholder="97301"></div>
       <div class="fi-go"><button class="btn primary" data-act="findAddr" type="submit">Find my offices</button></div>
-      <p class="note fi-note" role="status">${am ? (am.html || esc(am)) : 'Your address stays in this browser. It’s matched against Census street address ranges, not sent anywhere.'}</p>
+      <p class="note fi-note" role="status">${am ? (am.html || esc(am)) : 'ZIP code only shows every district that covers part of your ZIP. Your address stays in this browser; it’s matched against Census street address ranges, not sent anywhere.'}</p>
     </form>
     ${body}`;
   fillStreetList(zip);
@@ -3196,7 +3198,7 @@ function taskHtml(st, openId){
 /* Progress strip shown at the top of Find offices and Your plan: Address → Office → Plan. */
 function flowStrip(stage){
   const s = S.intake;
-  const addrDone = !!(s.addr || s.browseCounty), officeDone = hasRace();
+  const addrDone = !!(s.addr || s.browseCounty || s.zipMode), officeDone = hasRace();
   const st = [
     ['Address', addrDone, 'find', stage === 'address'],
     ['Office', officeDone, 'find', stage === 'office'],
@@ -3900,6 +3902,8 @@ document.addEventListener('click', async e => {
   if (t.dataset.findview){ S.findView = t.dataset.findview; save(); renderFind(); return; }
   if (t.dataset.cand){ const inp = $('#addrIn'); if (inp) inp.value = t.dataset.cand; return runAddr(); }
   if (t.dataset.act === 'findAddr') return runAddr();
+  if (t.dataset.act === 'zipOnly'){ S.intake.addr = null; return zipSearch(S.intake.zip); }
+  if (t.dataset.zc){ S.intake.county = t.dataset.zc; save(); renderFind(); renderChip(); return; }
   if (t.dataset.act === 'endBrowse'){ S.intake.browseCounty = ''; save(); renderFind(); $('#addrIn') && $('#addrIn').focus(); return; }
   if (t.dataset.act === 'unlock'){ S.intake.picked = false; S.intake.manual = true; S.intake.isExample = false; S.setupOpen = true; save(); render(); return; }
   if (t.dataset.act === 'tlAll'){ S.tlAll = !S.tlAll; save(); renderRoad(); return; }
@@ -3985,7 +3989,7 @@ document.addEventListener('change', e => {
   }
   if (t.dataset.q){ const k = t.dataset.q; S.quals = S.quals || {}; S.quals[k] = t.value; save(); renderFind(); const el = $('#' + t.id); if (el) el.focus(); return; }
   if (t.dataset.qc){ S.quals = S.quals || {}; S.quals.creds = S.quals.creds || {}; S.quals.creds[t.dataset.qc] = t.checked; if (t.checked) t.dataset.qc === 'none' ? (S.quals.creds = {none:true}) : delete S.quals.creds.none; S.eligOpen = true; save(); renderFind(); return; }
-  if (t.id === 'browseCounty'){ S.intake.browseCounty = t.value; S.intake.addr = null; addrMsg = null; if (t.value) S.intake.county = t.value; save(); renderFind(); renderChip(); return; }
+  if (t.id === 'browseCounty'){ S.intake.browseCounty = t.value; S.intake.zipMode = ''; S.intake.addr = null; addrMsg = null; if (t.value) S.intake.county = t.value; save(); renderFind(); renderChip(); return; }
   if (t.id === 'findCounty'){ S.intake.county = t.value; S.intake.zip = ''; S.intake.addr = null; addrMsg = null; save(); renderFind(); renderChip(); return; }
   if (t.dataset.sub){ S.sub = S.sub || {}; if (t.checked) S.sub[t.dataset.sub] = true; else delete S.sub[t.dataset.sub]; save(); const id = t.dataset.sub.split('#')[0], items = DO[id] || [], n = items.filter((_, i) => S.sub[id + '#' + i]).length, el = document.getElementById('todo-n-' + id); if (el) el.textContent = n + '/' + items.length; return; }
   if (t.id === 'jumpTo' && t.value){ const id = t.value; if (id.startsWith('phase-')){ const n = id.slice(6); S.collapsed = S.collapsed || {}; S.collapsed[n] = false; save(); renderRoad(); document.getElementById(id)?.scrollIntoView({block:'start'}); } else { const b = document.createElement('button'); b.dataset.scrollto = id.slice(5); b.hidden = true; document.body.appendChild(b); b.click(); b.remove(); } return; }
@@ -4024,14 +4028,24 @@ document.addEventListener('input', e => {
 async function runAddr(){
   const q = ($('#addrIn') || {}).value || '', zip = (($('#zipIn') || {}).value || '').replace(/\D/g,'').slice(0,5);
   S.intake.addrQ = q.trim(); if (zip) S.intake.zip = zip;
-  if (!q.trim()){ addrMsg = 'Type your street address first.'; return renderFind(); }
+  if (!q.trim()) return zipSearch(zip);
   addrMsg = 'Looking up your address…'; const n = $('.fi-note'); if (n) n.textContent = addrMsg;
   try {
     const r = await lookupAddress(q, S.intake.zip);
-    if (r.ok){ S.addrEdit = false; S.intake.addr = r; S.intake.county = r.cc; S.intake.browseCounty = ''; S.intake.isExample = false; addrMsg = {html:`Found it. <button class="linkbtn" data-act="clearAddr">Clear address</button>`}; }
+    if (r.ok){ S.addrEdit = false; S.intake.addr = r; S.intake.county = r.cc; S.intake.browseCounty = ''; S.intake.zipMode = ''; S.intake.isExample = false; addrMsg = {html:`Found it. <button class="linkbtn" data-act="clearAddr">Clear address</button>`}; }
     else { S.intake.addr = null; addrMsg = {html: esc(r.err) + (r.cands ? `<span class="cands">${r.cands.map(c => `<button class="pchip" data-cand="${esc(r.n + ' ' + titleCase(c))}">${esc(titleCase(c))}</button>`).join('')}</span>` : '')}; }
-  } catch(e){ addrMsg = 'Street data couldn’t load. Check your connection and try again; the ZIP and county lookups still work.'; }
+  } catch(e){ addrMsg = {html:`Street data couldn’t load. Check your connection and try again, or <button class="linkbtn" data-act="zipOnly">search by ZIP code only</button>.`}; }
   save(); renderFind(); renderChip();
+}
+/* ZIP-only search: every district that covers part of the ZIP, with the share of residents in each. Uses the built-in ZIP data, no street files. */
+function zipSearch(zip){
+  zip = String(zip || '').replace(/\D/g, '').slice(0, 5);
+  if (!/^\d{5}$/.test(zip)){ addrMsg = 'Enter your ZIP code, or your street address and ZIP.'; return renderFind(); }
+  const z = GEO.zips[zip];
+  if (!z){ addrMsg = `${zip} isn’t a residential Oregon ZIP code in the Census data. Check it, or browse a county below.`; return renderFind(); }
+  const top = z.c.slice().sort((a, b) => b[1] - a[1])[0][0];
+  Object.assign(S.intake, {zip, zipMode:zip, addr:null, browseCounty:'', county: z.c.some(x => x[0] === S.intake.county) ? S.intake.county : top, isExample:false});
+  S.addrEdit = false; addrMsg = null; save(); renderFind(); renderChip();
 }
 async function readFile(input, handler){
   const f = input.files && input.files[0]; input.value = '';
