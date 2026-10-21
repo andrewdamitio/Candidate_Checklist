@@ -627,6 +627,9 @@ span.flow-b{cursor:default;opacity:.7}
 .todo label{display:flex;gap:9px;align-items:flex-start;cursor:pointer;font-size:14.5px}
 .todo input{width:18px;height:18px;margin-top:2px;accent-color:var(--fir);flex:none}
 .todo input:checked + span{color:var(--muted);text-decoration:line-through}
+.todo-acts{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0 0 27px}
+.todo-act{appearance:none;font:500 12.5px var(--body);color:var(--fir);background:var(--fir-soft);border:0;border-radius:4px;padding:3px 8px;cursor:pointer;text-decoration:none;line-height:1.4}
+.todo-act:hover{text-decoration:underline}
 details.more{border-top:1px dashed var(--rule);padding-top:6px}
 details.more > summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--fir);padding:4px 0}
 details.more > *:not(summary){margin-top:8px}
@@ -680,7 +683,7 @@ details.more > *:not(summary){margin-top:8px}
   <section id="view-learn" hidden></section>
   <section id="view-voters" hidden></section>
   <section id="view-src" hidden></section>
-  <p class="footer">Ballot Path is a planning aid, not legal advice. Election rules change. Your filing officer and the current candidate manuals have the final word. Dates are calculated from Oregon's statutory day counts and checked against the dates the Secretary of State published for 2025 and 2026.</p>
+  <p class="footer">Ballot Path is a planning aid, not legal advice. Election rules change. The official sources have the final word: your filing officer and the current candidate manuals on getting on the ballot, the Secretary of State’s Elections Division on campaign finance and election law (the FEC for federal races), and the Oregon Government Ethics Commission on ethics. Dates are calculated from Oregon's statutory day counts and checked against the dates the Secretary of State published for 2025 and 2026.</p>
 </main>
 
 <input type="file" id="fileVoters" accept=".txt,.csv,.tsv,text/plain,text/csv" hidden>
@@ -1093,6 +1096,8 @@ function limitsText(o){
   return 'Local races use the State Representative limits ($3,300 per person per election; $2,000 from a political action committee) unless your city, county, or district has adopted lower ones.';
 }
 
+/* School board titles: "Corvallis School District 509J Board", but "School Board, Klamath Falls City Schools" for the one district whose name has no "School District". */
+const boardTitle = nm => /school district/i.test(nm) ? nm + " Board" : "School Board, " + nm;
 function ctx(){
   const s = S.intake, o = OFF[s.office], kind = kindOf(o, s);
   const path = kind === 'partisan' ? s.path : null;
@@ -1132,7 +1137,7 @@ function ctx(){
   c.swcd = o.id === 'swcd' ? (SWCD.d[s.swcd] ? s.swcd : ((SWCD.c[s.county] || [])[0] || '')) : '';
   if (c.swcd) c.fee = 0;
   c.board = o.id === 'school' ? (BOARDS[s.sid] || null) : null;
-  c.title = c.noCityData ? `${c.cityName} City Council or Mayor` : o.id === 'school' && s.seatName ? `${s.seatName} Board${s.pos ? ', ' + s.pos : ''}` : o.id === 'swcd' ? `${c.swcd ? c.swcd + ' Director' : 'Soil and Water Conservation District Director'}${s.seatName ? ', ' + s.seatName : ''}` : o.id === 'city' && s.seatName ? s.seatName : o.id === 'county_np' && roleOf(s.seatName) && GEO.counties[s.county] ? `${GEO.counties[s.county].n} County ${roleOf(s.seatName)}` : o.id === 'special' && SPECIAL_NAME[s.distType] ? SPECIAL_NAME[s.distType] : o.label;
+  c.title = c.noCityData ? `${c.cityName} City Council or Mayor` : o.id === 'school' && s.seatName ? `${boardTitle(s.seatName)}${s.pos ? ', ' + s.pos : ''}` : o.id === 'swcd' ? `${c.swcd ? c.swcd + ' Director' : 'Soil and Water Conservation District Director'}${s.seatName ? ', ' + s.seatName : ''}` : o.id === 'city' && s.seatName ? s.seatName : o.id === 'county_np' && roleOf(s.seatName) && GEO.counties[s.county] ? `${GEO.counties[s.county].n} County ${roleOf(s.seatName)}` : o.id === 'special' && SPECIAL_NAME[s.distType] ? SPECIAL_NAME[s.distType] : o.label;
   c.desc = o.id === 'county_np' ? (ROLE_DESC[roleOf(s.seatName)] || 'An elected county officer. Four-year term.') : (OFFICE_DESC[o.id] || '');
   c.withdraw = etype === 'district' ? cyc.deadline : addDays(cyc.baseDeadline, 3);
   if (o.officer !== 'sos') c.officer = Object.assign({}, c.officer, {how:'You can file in person, by mail, by fax, or as a scanned email attachment.'});
@@ -2005,6 +2010,91 @@ const TEMPLATES = [
      ['Chamber of commerce','Rotary or other service club','Neighborhood association','PTA or parent group','Union','Faith community','Business or farm group'].forEach(g => rows.push(['Community', g, '', '', '', '', '', '', '', '']));
      return csvOf(rows);
    }},
+  /* Before you decide and before you file: personal safety, time, money, and self-research. */
+  {id:'optout', title:'People-search opt-out tracker', fmt:'Spreadsheet (.csv)', steps:[], stage:'Safety and privacy',
+   d:'The major people-search sites with their free opt-out pages, and columns to track each request and when to check again.',
+   build(){
+     const S2 = [['Whitepages','https://www.whitepages.com/suppression-requests','Form plus a phone verification call'],
+       ['Spokeo','https://www.spokeo.com/optout','Confirm by email'],
+       ['BeenVerified','https://www.beenverified.com/f/optout/search','Confirm by email; also covers its sister sites'],
+       ['PeopleConnect suppression center','https://suppression.peopleconnect.us/login','One request for Intelius, Instant Checkmate, TruthFinder, and related sites'],
+       ['PeopleFinders','https://www.peoplefinders.com/opt-out',''],
+       ['TruePeopleSearch','https://www.truepeoplesearch.com/removal','Confirm by email'],
+       ['FastPeopleSearch','https://www.fastpeoplesearch.com/removal',''],
+       ['Radaris','https://radaris.com/control/privacy',''],
+       ['ThatsThem','https://thatsthem.com/optout',''],
+       ['Nuwber','https://nuwber.com/removal/link',''],
+       ['Google: Results about you','https://myactivity.google.com/results-about-you','Asks Google to drop search results showing your address, phone, or email'],
+       ['Oregon data broker registry (to find others)','https://dfr.oregon.gov/business/licensing/data-broker-registry','Brokers that must register with the state']];
+     return csvOf([['Site','Opt-out page','How it works','Date requested','Confirmed?','Removed (date checked)','Check again by','Notes']].concat(S2.map(([a, b, c]) => [a, b, c, '', '', '', '', ''])).concat([['Tip','','Use a separate email address for confirmations. Sites often relist people, so check again every three months.','','','','','']]));
+   }},
+  {id:'privacy', title:'Family privacy agreement', fmt:'Printable page', steps:[], stage:'Safety and privacy',
+   d:'A worksheet for the people you live with: what stays private, how family appears in the campaign, and protected time.',
+   build(){ const t = tplFacts();
+     const rows = ['Our home address and street','Children’s names, photos, and schools','Workplaces of family members','Family members’ social media accounts','Health, money, and other personal matters','Photos taken inside our home'];
+     return docShell('Family privacy agreement', `<h1>Our family’s campaign agreement</h1><p class="hint">Fill this in together before ${t.name}’s name is public. Revisit it if anything changes.</p>
+       <h2>What stays private</h2><table><thead><tr><th style="width:46%">Item</th><th>Private</th><th>OK to share</th><th>Ask first</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r}</td><td>☐</td><td>☐</td><td>☐</td></tr>`).join('')}<tr><td>${TF('Other')}</td><td>☐</td><td>☐</td><td>☐</td></tr></tbody></table>
+       <h2>How family appears in the campaign</h2><p>☐ In photos and mail &nbsp; ☐ At events &nbsp; ☐ Knocking doors &nbsp; ☐ Not at all</p><div class="ln"></div>
+       <h2>Protected time</h2><p class="hint">Nights, weekends, or events that stay campaign-free.</p><div class="ln"></div><div class="ln"></div>
+       <h2>If something goes wrong</h2><p class="hint">Who to tell, and what we do if someone comes to the door, calls, or posts about the family.</p><div class="ln"></div><div class="ln"></div>
+       <p style="margin-top:22px">Signed: <span class="ln" style="display:inline-block;width:60%"></span></p>`); }},
+  {id:'threatlog', title:'Threat and harassment log', fmt:'Spreadsheet (.csv)', steps:[], stage:'Safety and privacy',
+   d:'One row per incident, with what police and platforms need if you report it later.',
+   build(){ return csvOf([['Date','Time','Where (platform, phone, in person, mail)','Who (name, handle, or description)','Exact words or description','Screenshot or photo saved? (file name)','Witnesses','Reported to (platform, police, other)','Report or case number','Follow-up'],
+     ['Tip: record exact words and save originals. Call 911 for any immediate threat. Report online threats to the platform as well as police.','','','','','','','','','']]); }},
+  {id:'security', title:'Account security checklist', fmt:'Printable page', steps:[], stage:'Safety and privacy',
+   d:'Every account to lock down, with two-step login, a password manager, and separate campaign accounts.',
+   build(){ const A = ['Personal email','Campaign email','Phone carrier account (add a PIN against SIM swaps)','Bank and campaign bank','Donation platform','ORESTAR','Facebook and Instagram','X, TikTok, YouTube, LinkedIn','Website and domain registrar','Email newsletter service','Password manager itself'];
+     return docShell('Account security checklist', `<h1>Lock down your accounts</h1><p class="hint">Do this before you announce. Campaigns, including local ones, are targets for account takeovers and impersonation.</p>
+       <table><thead><tr><th style="width:38%">Account</th><th>Unique password (in a password manager)</th><th>Two-step login (app, not text, where offered)</th><th>Recovery codes saved</th><th>Who else has access</th></tr></thead><tbody>${A.map(a => `<tr><td>${a}</td><td>☐</td><td>☐</td><td>☐</td><td></td></tr>`).join('')}</tbody></table>
+       <h2>Also</h2><ul><li>Use separate campaign accounts; give staff and volunteers their own logins with roles, never your password.</li><li>Check whether your email appears in known breaches (haveibeenpwned.com) and change those passwords first.</li><li>Lock your domain at the registrar, and keep its renewal on autopay.</li><li>Remove access the day someone leaves the campaign.</li></ul>`); }},
+  {id:'timebudget', title:'Weekly time budget', fmt:'Spreadsheet (.csv)', steps:[], stage:'Before you decide',
+   d:'Plan your campaign hours each week by activity, then compare with what actually happened.',
+   build(){ const cats = ['Call time (asking for money)','Door knocking','Events, forums, and meetings','Volunteer recruiting and training','Planning, admin, and email','Learning the job (meetings, reading)'];
+     const rows = [['Week of','Activity','Planned hours','Actual hours','Notes']];
+     cats.forEach(c => rows.push(['', c, '', '', '']));
+     rows.push(['', 'Total', `=SUM(C2:C${cats.length + 1})`, `=SUM(D2:D${cats.length + 1})`, 'Copy these rows for each week']);
+     return csvOf(rows); }},
+  {id:'personalcost', title:'Personal cost worksheet', fmt:'Spreadsheet (.csv)', steps:[], stage:'Before you decide',
+   d:'What running costs you personally, not the campaign: lost income, childcare, travel, and your own contribution.',
+   build(){ const items = [['Lost income (unpaid time off)','Hours a month × your hourly pay'],['Childcare or caregiving','Extra hours you’ll need covered'],['Mileage and parking',''],['Phone and internet',''],['Clothes and photos',''],['Your own contribution to the campaign','Set a cap you won’t pass'],['Other','']];
+     const rows = [['Item','How to estimate','Per month ($)','Months','Total ($)']];
+     items.forEach(([a, b], i) => rows.push([a, b, '', '', `=IF(AND(C${i + 2}<>"",D${i + 2}<>""),C${i + 2}*D${i + 2},"")`]));
+     rows.push(['Total', '', '', '', `=SUM(E2:E${items.length + 1})`]);
+     return csvOf(rows); }},
+  {id:'records', title:'Your records and how you’d explain them', fmt:'Spreadsheet (.csv)', steps:[], stage:'Before you decide',
+   d:'Every court case, ticket, lawsuit, or other record about you, where you checked, and the two sentences you’d say about each.',
+   build(){ return csvOf([['Type (traffic, criminal, lawsuit, eviction, family, bankruptcy, licensing, news, social post)','Court or source','Year','Case number or link','Outcome','Likely to come up? (yes / maybe / no)','Your two-sentence explanation','Who on the campaign knows'],
+     ['Example: speeding ticket (delete this row)','Salem Municipal Court','2019','','Paid','Maybe','“I was speeding, I paid the fine, and I haven’t had a ticket since.”','Campaign manager']]); }},
+  {id:'accounts', title:'Social media and online accounts inventory', fmt:'Spreadsheet (.csv)', steps:[], stage:'Before you decide',
+   d:'Every account you’ve ever had, whether you downloaded its archive, and what you decided to keep, lock, or delete.',
+   build(){ const P = ['Facebook','Instagram','X (Twitter)','TikTok','YouTube','Reddit','LinkedIn','Nextdoor','Old blogs or forums','Comments on news sites','Dating or other apps'];
+     return csvOf([['Platform','Handle or URL','Years active','Archive downloaded?','Reviewed?','Posts to worry about','Decision (keep / lock / archive and delete)','Done']].concat(P.map(p => [p, '', '', '', '', '', '', '']))); }},
+  {id:'meetinglog', title:'Meeting notes log', fmt:'Spreadsheet (.csv)', steps:[], stage:'Before you decide',
+   d:'Track the meetings you watch and the issues that keep coming back; they’re what voters and reporters will ask about.',
+   build(){ return csvOf([['Date','Body (council, board, committee)','Agenda item','What was decided','Vote','Public comment themes','Comes up again? (yes / no)','What you’d have done','Link to video or minutes']]); }},
+  /* Campaign operations. */
+  {id:'photorights', title:'Photo rights agreement', fmt:'Printable page', steps:[], stage:'Message',
+   d:'A short agreement giving your campaign the right to use the photos, and to pass them to news media, endorsers, and printers.',
+   build(){ const t = tplFacts();
+     return docShell('Photo rights agreement', `<h1>Photography license</h1><p class="hint">A starting point, not legal advice. Have a lawyer review it if the shoot is paid or the photos are valuable.</p>
+       <p>Photographer: ${TF('name')} · Campaign: ${t.cmte} · Candidate: ${t.name} · Shoot date: ${TF('date')}</p>
+       <p>1. <b>License.</b> The photographer grants the campaign and the candidate a non-exclusive, perpetual, royalty-free license to use, copy, edit, and publish the photos from this shoot for any purpose connected with the candidate’s campaigns and public service.</p>
+       <p>2. <b>Passing them on.</b> The campaign may share the photos, under the same terms, with news media, endorsing organizations, printers, mail vendors, and election officials, including for the voters’ pamphlet.</p>
+       <p>3. <b>Credit.</b> When practical, credit reads: “Photo by ${TF('photographer')}.”</p>
+       <p>4. <b>Files.</b> The photographer will deliver full-resolution original files by ${TF('date')}.</p>
+       <p>5. <b>Payment.</b> ☐ $${TF('amount')} &nbsp; ☐ Donated. The fair value of a donated shoot, ${TF('$ value')}, is reported as an in-kind contribution.</p>
+       <p style="margin-top:22px">Photographer signature and date: <span class="ln" style="display:inline-block;width:50%"></span></p><p>For the campaign, signature and date: <span class="ln" style="display:inline-block;width:50%"></span></p>`); }},
+  {id:'signlog', title:'Lawn sign locations log', fmt:'Spreadsheet (.csv)', steps:[], stage:'Voters',
+   d:'Every sign location with the owner’s permission, who placed it, and pickup after the election.',
+   build(){ return csvOf([['Address','Owner name','Phone or email','Permission given (date, how)','Sign size','Placed by','Date placed','Replaced (dates)','Picked up (date)','Notes'],
+     ['Tip: never place signs in the road right-of-way, including the strip between sidewalk and curb. Get the owner’s permission for every location.','','','','','','','','','']]); }},
+  {id:'training', title:'Volunteer shift training and debrief', fmt:'Printable page', steps:[], stage:'Team',
+   d:'A 20-minute training agenda for new volunteers and a debrief sheet for the end of each shift.',
+   build(){ const t = tplFacts();
+     return docShell('Volunteer training', `<h1>Volunteer shift training: ${t.office}</h1>
+       <h2>Before the first shift (20 minutes)</h2><ol><li><b>Why ${t.name} is running</b> (2 min): the one-sentence message.</li><li><b>The script</b> (5 min): practice in pairs.</li><li><b>The list or app</b> (5 min): how to mark each voter and log results.</li><li><b>Hard doors</b> (3 min): don’t argue; thank them and move on. Skip “No soliciting” signs. Leave if anything feels wrong.</li><li><b>Rules</b> (3 min): nothing in or on mailboxes; stay off lawns when asked; pairs or shared routes; stop at dusk.</li><li><b>Questions</b> (2 min).</li></ol>
+       <h2 class="page">Shift debrief</h2><table><tbody><tr><th style="width:38%">Date and turf</th><td></td></tr><tr><th>Doors knocked</th><td></td></tr><tr><th>Conversations</th><td></td></tr><tr><th>Strong and lean supporters</th><td></td></tr><tr><th>Sign requests and volunteer leads</th><td></td></tr><tr><th>A good conversation</th><td style="height:60px"></td></tr><tr><th>What to change next time</th><td style="height:60px"></td></tr><tr><th>Next shift they’ll take</th><td></td></tr></tbody></table>`); }},
   /* Spanish versions of the pieces voters and donors see. */
   {id:'doorscript-es', title:'Guion para tocar puertas y notas “Lo siento, no lo encontré”', fmt:'Página para imprimir', steps:['doors'], stage:'En español',
    d:'Door script, voter codes, and cut-out notes in Spanish, for Spanish-speaking canvassers and voters.',
@@ -2828,7 +2918,7 @@ function findEntries(src, f, exact){
       if (cd.mayorElected) E.push({lvl:CI, title:`Mayor of ${nm}`, office:'city', seat:`Mayor of ${nm}`, place:x[0], pop:P.place[x[0]], when:cd.mayorNext || 2028, year:cd.mayorNext || undefined, up:cd.mayorNext || null, unknownUp:!cd.mayorNext, share:sh(x[1]), badges:['np','onfile'], note: cd.mayor});
     } else E.push({lvl:CI, title:`${nm} City Council or Mayor`, office:'city', seat:nm, place:x[0], pop:P.place[x[0]], when:2028, share:sh(x[1]), badges:['np','nodata'], note:`We don’t have ${nm}’s candidate rules. The fee, signature count, deadline, residency rule, and which seats are up are set by the city, so get the candidate packet from the city recorder before you plan around anything here.`}); });
   src.k.filter(x => x[0]).forEach(x => { const nm = GEO.schools[x[0]] || x[0];
-    E.push({lvl:S2, title:`${nm} Board`, office:'school', seat:nm, sid:x[0], pop:P.school[x[0]], when:'district', share:sh(x[1]), badges: BOARDS[x[0]] ? ['np','onfile2'] : ['np','zone']}); });
+    E.push({lvl:S2, title:boardTitle(nm), office:'school', seat:nm, sid:x[0], pop:P.school[x[0]], when:'district', share:sh(x[1]), badges: BOARDS[x[0]] ? ['np','onfile2'] : ['np','zone']}); });
   (SWCD.c[f] || []).forEach(nm => E.push({lvl:S2, title:`${nm} Director`, office:'swcd', seat:'', swcd:nm, pop:null, w:null, when:'nov', varies:true, badges: SWCD_BIG.includes(f) ? ['np'] : ['np','land'], multi:(SWCD.c[f] || []).length > 1}));
   E.push({lvl:S2, title:'Special district boards', office:'special', seat:'', pop:null, w:null, when:'district', badges:['np'], note:'Fire, water, parks, library, and others. Your county elections office can list the districts at your address.', varies:true});
   E.push({lvl:PA, title:'Precinct Committeeperson', office:'pcp', seat:'', w:3, when:'may', year:2028, badges:['free'], note:'Party office on the May ballot. You need at least 3 votes to be elected.'});
@@ -3198,7 +3288,7 @@ function renderFind(){
       <div class="gs-alt">
         <div class="row note"><label for="browseCounty">Rather not enter a ZIP? Browse a whole county:</label> <select id="browseCounty"><option value="">Choose a county</option>${cOpts}</select></div>
         <div class="row note">Already know your race? <button class="linkbtn" data-act="manual">Set it up by hand</button> · New to all this? <button class="linkbtn" data-tab="learn">Learn how Oregon elections work</button></div>
-        <p class="note">Free, with no accounts or tracking. Your work saves automatically in this browser; use <b>Save your work</b> on Your plan to keep a copy or move to another device. A planning guide, not legal advice: your filing officer has the final word.</p>
+        <p class="note">Free, with no accounts or tracking. Your work saves automatically in this browser; use <b>Save your work</b> on Your plan to keep a copy or move to another device. A planning guide, not legal advice: the official sources (your filing officer, the Elections Division, and the Ethics Commission) have the final word.</p>
       </div>`;
     fillStreetList(zip);
     return;
@@ -3383,7 +3473,58 @@ function todoHtml(st){
   const items = DO[st.id]; if (!items) return '';
   S.sub = S.sub || {};
   const n = items.filter((_, i) => S.sub[st.id + '#' + i]).length;
-  return `<div class="todo"><p class="todo-h">What to do <span class="todo-n" id="todo-n-${st.id}">${n}/${items.length}</span></p><ul>${items.map((x, i) => `<li><label><input type="checkbox" data-sub="${st.id}#${i}" ${S.sub[st.id + '#' + i] ? 'checked' : ''}> <span>${x}</span></label></li>`).join('')}</ul></div>`;
+  return `<div class="todo"><p class="todo-h">What to do <span class="todo-n" id="todo-n-${st.id}">${n}/${items.length}</span></p><ul>${items.map((x, i) => `<li><label><input type="checkbox" data-sub="${st.id}#${i}" ${S.sub[st.id + '#' + i] ? 'checked' : ''}> <span>${x}</span></label>${todoActs(st.id, i)}</li>`).join('')}</ul></div>`;
+}
+/* What each checklist item links to: a template (tpl), a source in LINKS (link), an outside tool (url + label), a plan step (step + label), or a tab. */
+const DO_ACT = {
+  household:{0:{tpl:'privacy'}, 1:{tpl:'timebudget'}, 2:{tpl:'privacy'}, 3:{tpl:'calltime'}},
+  hours:{0:{tpl:'timebudget'}},
+  money:{0:{tpl:'personalcost'}, 1:{tpl:'personalcost'}},
+  safety:{0:[{url:'https://www.usps.com/manage/po-boxes.htm', label:'USPS PO boxes'}, {step:'sel180', label:'Keep your address off the public record'}], 1:{url:'https://voice.google.com/', label:'Google Voice (free number)'}, 2:{tpl:'optout'}, 3:{tpl:'privacy'}, 4:{tpl:'threatlog'}},
+  secure:{0:{tpl:'security'}},
+  learn:{0:{tpl:'meetinglog'}, 1:{tpl:'meetinglog'}},
+  vet:{0:{tpl:'records'}, 1:{link:'ojdSearch'}, 2:[{link:'dmvRecord'}, {link:'ospRecord'}], 4:{tpl:'records'}},
+  scrub:{0:{tpl:'accounts'}, 4:{url:'https://myactivity.google.com/results-about-you', label:'Google: Results about you'}},
+  bank:{0:{link:'irsEin'}},
+  budget:{0:{link:'filerSearch'}, 1:{tpl:'budget'}, 2:{tpl:'budget'}},
+  asks:{0:{tpl:'calltime'}, 3:{tpl:'thanks'}},
+  houseparty:{2:[{tpl:'contrib'}, {tpl:'volsignup'}], 3:{tpl:'thanks'}},
+  recruit:{2:{tpl:'volsignup'}, 3:{tpl:'volroster'}},
+  volunteers:{0:{tpl:'training'}, 2:{tpl:'training'}},
+  message:{0:{tpl:'message'}, 1:{tpl:'message'}, 2:{tpl:'doorscript'}},
+  photos:{0:{tpl:'photorights'}},
+  press:{0:{tpl:'contactlist'}, 1:{tpl:'press'}},
+  forums:{0:{tpl:'forumprep'}},
+  endorse:{0:{tpl:'contactlist'}, 2:{tpl:'endorse'}},
+  signs:{2:{tpl:'signlog'}, 3:{tpl:'signlog'}},
+  contacts:{0:{tpl:'contactlist'}},
+  load:{0:{tab:'voters', label:'Open the Voters tab'}},
+  doors:{0:{tab:'voters', label:'Open the Voters tab'}, 3:{tpl:'doorscript'}},
+  votegoal:{0:{step:'race', label:'Size up your race'}},
+  race:{2:{link:'filerSearch'}, 3:{link:'cfSearch'}},
+  oppo:{0:{link:'filerSearch'}},
+  attacks:{0:{tpl:'records'}},
+  pamphlet:{1:{tpl:'endorse'}},
+  phones:{2:{link:'campVerify'}},
+  hatch:{2:{link:'oscFed'}},
+  rules:{0:{link:'sosComplaint'}},
+  ethics:{2:{link:'ogecAdvice'}},
+  after:{1:{tpl:'thanks'}},
+};
+let PLAN_IDS = null;   // steps in the plan being rendered, so links to steps this race doesn't have are left out
+function todoActs(id, i){
+  const a = (DO_ACT[id] || {})[i]; if (!a) return '';
+  const hasStep = sid => !PLAN_IDS || PLAN_IDS.has(sid);
+  const one = x => {
+    if (x.tpl){ const T = TEMPLATES.find(t => t.id === x.tpl); return T ? `<button class="todo-act" data-tpl="${T.id}">Template: ${esc(T.title)}</button>` : ''; }
+    if (x.link && LINKS[x.link]) return `<a class="todo-act" href="${esc(LINKS[x.link][1])}" target="_blank" rel="noopener">${esc(LINKS[x.link][0])} ↗</a>`;
+    if (x.url) return `<a class="todo-act" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.label)} ↗</a>`;
+    if (x.step) return hasStep(x.step) ? `<button class="todo-act" data-scrollto="${x.step}">Step: ${esc(x.label)}</button>` : '';
+    if (x.tab) return `<button class="todo-act" data-tab="${x.tab}">${esc(x.label)}</button>`;
+    return '';
+  };
+  const html = [].concat(a).map(one).join('');
+  return html ? `<div class="todo-acts">${html}</div>` : '';
 }
 function stepBody(st){
   const a = anatomy(st);
@@ -3464,6 +3605,7 @@ function renderRoad(){
   }
   const c = ctx(), P = buildPlan(c);
   const all = P.flatMap(p => p.steps.flatMap(flatSteps)), doneN = all.filter(x => S.done[x.id]).length;
+  PLAN_IDS = new Set(all.map(x => x.id));
   const pct = all.length ? Math.round(doneN / all.length * 100) : 0;
   const ups = upNext(all, 4), nx = ups[0] || null;
   const dFile = daysTo(c.cyc.deadline), dElec = daysTo(c.cyc.election);
@@ -3886,7 +4028,8 @@ const PRIMER = [
   ['After the votes are in', `<p>Counties post first results after 8 p.m. on Election Day and keep counting for days. Voters whose ballot signature doesn’t match get a letter and a short window to fix it. Results become official when the county or state certifies them. Winners usually take office in January, or July 1 for school and special district boards.</p>`],
 ];
 function renderLearn(){
-  const stages = [...new Set(TEMPLATES.map(x => x.stage))];
+  const ORDER = ['Before you decide','Safety and privacy','Money','Team','Message','Voters','En español'];
+  const stages = [...new Set(TEMPLATES.map(x => x.stage))].sort((a, b) => (ORDER.indexOf(a) + 99) % 99 - (ORDER.indexOf(b) + 99) % 99);
   $('#view-learn').innerHTML = `
     <div class="view-head"><div><p class="eyebrow">Learn</p><h1>The basics of running in Oregon</h1></div><p>How elections here work, fill-in templates for the paperwork, and plain-language definitions of the words you’ll run into.</p></div>
     <p class="note" lang="es"><b>En español:</b> para leer esta guía en español, use la función de traducir de su navegador (en Chrome, haga clic derecho y elija “Traducir”). Abajo hay plantillas en español para tocar puertas, inscribir voluntarios y recibir contribuciones.</p>

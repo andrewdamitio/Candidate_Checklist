@@ -8,7 +8,7 @@ The plan also covers legal checks first-time candidates miss (the federal Hatch 
 
 It's a single web page with no server, accounts, or tracking. Everything a person enters (address, answers, checklist progress, voter files) stays in their own browser.
 
-> **A planning aid, not legal advice.** Election rules change. The filing officer and the current Secretary of State candidate manuals have the final word.
+> **A planning aid, not legal advice.** Election rules change. The official sources have the final word: the filing officer and the current Secretary of State candidate manuals on getting on the ballot, the Elections Division on campaign finance and election law (the FEC for federal races), and the Oregon Government Ethics Commission on ethics.
 
 ## What's in this repository
 
