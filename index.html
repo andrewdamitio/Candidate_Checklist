@@ -640,6 +640,15 @@ span.flow-b{cursor:default;opacity:.7}
 .res-d{font-size:13px;color:var(--muted);line-height:1.4;margin-top:2px}
 .res-m{flex:none;font:500 11.5px var(--mono);color:var(--muted);white-space:nowrap}
 @media (max-width:480px){.res-m{display:none}.todo-res{margin-left:0}}
+/* Required by law vs. recommended */
+.chip.req{font-family:var(--body);font-weight:600;font-size:11.5px;letter-spacing:.01em}
+.chip.req.law{background:var(--ink);color:var(--surface)}
+.chip.req.cond{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.chip.req.rec{background:var(--fir-soft);color:var(--fir)}
+.chip.req.opt{background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1px var(--rule)}
+.req-note{border-left:3px solid var(--ink);background:var(--sunk);padding:8px 12px;border-radius:0 6px 6px 0;margin:0 0 12px;font-size:14px;line-height:1.45}
+.req-note.cond{border-left-color:var(--gold)}
+.req-key{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12.5px;color:var(--muted)}
 .todo-how{margin:4px 0 2px 27px;font-size:13.5px;line-height:1.5}
 .todo-how summary{cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600;list-style-position:inside}
 .todo-how[open] summary{margin-bottom:4px}
@@ -3533,7 +3542,7 @@ function groupHtml(g, openId){
     <span class="gcount" aria-label="${d} of ${n} done">${done ? TICK : d + '/' + n}</span>
     <div class="task-main">
       <button class="task-title" data-open="${g.id}" aria-expanded="${open}">${g.title}<span class="chev" aria-hidden="true"></span></button>
-      <div class="task-meta">${nextDue ? dueChip(nextDue) : ''}<span class="chip">${n} steps</span></div>
+      <div class="task-meta">${(() => { const r = g.subs.filter(x => ['law','cond'].includes(reqOf(x))).length; return r ? `<span class="chip req law">${r} required</span>` : ''; })()}${nextDue ? dueChip(nextDue) : ''}<span class="chip">${n} steps</span></div>
       <div class="task-body gbody" ${open ? '' : 'hidden'}>${g.body}<ul class="subtasks">${g.subs.map(x => taskHtml(x, openId)).join('')}</ul></div>
     </div>
   </li>`;
@@ -3546,7 +3555,7 @@ function taskHtml(st, openId){
     <button class="tick" data-tick="${st.id}" aria-pressed="${done}" aria-label="${done ? 'Mark not done' : 'Mark done'}: ${esc(st.title.replace(/<[^>]+>/g,''))}">${TICK}</button>
     <div class="task-main">
       <button class="task-title" data-open="${st.id}" aria-expanded="${open}">${st.title}<span class="chev" aria-hidden="true"></span></button>
-      <div class="task-meta">${dueChip(st)}${!done && EST[st.id] != null ? `<span class="chip est" title="Rough estimate">${estTxt(st.id)}</span>` : ''}${(st.forms||[]).map(f => `<span class="form-chip">${esc(f)}</span>`).join('')}${st.verify ? `<span class="chip verify">Verify</span>` : ''}</div>
+      <div class="task-meta">${reqChip(st)}${dueChip(st)}${!done && EST[st.id] != null ? `<span class="chip est" title="Rough estimate">${estTxt(st.id)}</span>` : ''}${(st.forms||[]).map(f => `<span class="form-chip">${esc(f)}</span>`).join('')}${st.verify ? `<span class="chip verify">Verify</span>` : ''}</div>
       <div class="task-body" ${open ? '' : 'hidden'}>${open ? stepBody(st) : ''}</div>
     </div>
   </li>`;
@@ -3804,11 +3813,51 @@ function todoActs(id, i){
   const html = [].concat(a).map(one).join('');
   return html ? `<div class="res-list todo-res">${html}</div>` : '';
 }
+/* Required by law vs. recommended. law = required for everyone in this kind of race; cond = required when it applies;
+   opt = your choice; info = information, no label; anything not listed is recommended practice.
+   Each required step says what's at stake, consistent with what the step itself cites. */
+const REQ = {
+  quals:['law','If you don’t meet the qualifications, you can’t appear on the ballot or take office.'],
+  partyreg:['law','Miss this registration deadline and you can’t take the party’s nomination this cycle.'],
+  navreg:['law','Required to be nominated as an independent candidate.'],
+  seat:['law','Your filing has to name the right seat or position, and only seats on this ballot can be filed for.'],
+  file:['law','Miss the filing deadline and you won’t be on the ballot.'],
+  prospective:['law','Signatures collected before the petition is approved don’t count.'],
+  sigs:['law','Without enough valid signatures by the deadline, you won’t be on the ballot.'],
+  'swcd-sigs':['law','Without the required signatures, you can’t file.'],
+  'swcd-cert':['law','The county has to certify your signatures before you can file.'],
+  nominate:['law','A minor party candidate appears on the ballot only with the party’s nomination.'],
+  committee:['cond','Required once you raise or spend more than $1,500 in a year, or use a treasurer. Late or missing filings can bring civil penalties.'],
+  bank:['law','A campaign committee must keep its money in a separate campaign bank account.'],
+  limits:['law','Starting January 1, 2027, accepting contributions over the limits is a violation.'],
+  report:['law','Late or missing campaign finance reports can bring civil penalties.'],
+  disclaim:['law','A missing “Paid for by” line can cost up to 150% of what the communication cost.'],
+  'fec-5k':['law','Once you pass $5,000, federal registration deadlines start running.'],
+  'fec-f2':['law','Federal law requires this filing within 15 days of becoming a candidate.'],
+  'fec-f1':['law','Federal law requires your committee to register with the FEC.'],
+  'fec-bank':['law','Federal committees must keep their money in a campaign depository.'],
+  sei:['law','The Ethics Commission can impose penalties for a late or missing statement.'],
+  pubemp:['cond','Applies if you work for a public employer: no campaigning on the job.'],
+  hatch:['cond','Applies if you work for the federal government or a federally funded program; it can bar you from partisan races.'],
+  ethics:['cond','Applies from the day you take office.'],
+  ifwin:['cond','Applies if you win: oath, disclosures, and required training.'],
+  after:['law','Your committee owes reports until it’s closed, and local sign rules set removal deadlines.'],
+  pamphlet:['opt'], sel180:['opt'],
+  'pcp-money':['info'], 'fec-or':['info'], eday:['info'], count:['info'], rules:['info'], govt:['info'], race:['info'],
+};
+const REQ_LABEL = {law:'Required by law', cond:'Required if it applies', opt:'Optional', rec:'Recommended'};
+const reqOf = st => st.id === 'committee' && S.intake.money === 'over' ? 'law' : (REQ[st.id] || ['rec'])[0];   // said they'll pass $1,500
+const reqChip = st => { const k = reqOf(st); return k === 'info' ? '' : `<span class="chip req ${k}">${REQ_LABEL[k]}</span>`; };
+function reqNote(st){
+  const r = REQ[st.id]; if (!r || !r[1]) return '';
+  const k = reqOf(st);
+  return `<div class="req-note ${k}"><b>${REQ_LABEL[k]}.</b> ${r[1]}</div>`;
+}
 function stepBody(st){
   const a = anatomy(st);
   const foot = `${st.verify ? `<p class="note"><b>Verify:</b> ${esc(st.verify)}</p>` : ''}${(st.cite || (st.links && st.links.length)) ? `<p class="cite"><b>Sources:</b> ${st.cite ? esc(st.cite) : ''}${st.cite && st.links && st.links.length ? ' · ' : ''}${(st.links||[]).map(link).join(' · ')}</p>` : ''}`;
-  if (a.inline && FULLBODY.has(st.id)) return `${a.more}${todoHtml(st)}${tplButtons(st.id)}${foot}`;
-  return `${a.flags}${a.summary}${a.shown}${todoHtml(st)}${tplButtons(st.id)}${a.more ? (a.inline ? a.more : `<details class="more"><summary>Details and why</summary>${a.more}</details>`) : ''}${a.tools}${foot}`;
+  if (a.inline && FULLBODY.has(st.id)) return `${reqNote(st)}${a.more}${todoHtml(st)}${tplButtons(st.id)}${foot}`;
+  return `${reqNote(st)}${a.flags}${a.summary}${a.shown}${todoHtml(st)}${tplButtons(st.id)}${a.more ? (a.inline ? a.more : `<details class="more"><summary>Details and why</summary>${a.more}</details>`) : ''}${a.tools}${foot}`;
 }
 
 /* Up next: anything due within 45 days first, then the plan order. */
@@ -3870,7 +3919,7 @@ function planHtml(c){
       : stepOut(st)).join('')}`).join('');
   function stepOut(st){
     const items = DO[st.id] || [];
-    return `<section class="step"><h4>${S.done[st.id] ? '☑' : '☐'} ${st.title}${st.due ? ` <small>(${esc(st.dueLabel || 'Due')} ${fmt(st.due)})</small>` : ''}</h4>${items.length ? `<ul class="do">${items.map((x, i) => { const h = (DO_HOW[st.id] || {})[i], ht = typeof h === 'function' ? h(c) : h; return `<li>${S.sub && S.sub[st.id + '#' + i] ? '☑' : '☐'} ${x}${ht ? `<br><small>${ht}</small>` : ''}</li>`; }).join('')}</ul>` : ''}${(st.body || '').replace(/<details([^>]*)>/g, '<details$1 open>')}${st.cite || (st.links && st.links.length) ? `<p class="cite">Sources: ${st.cite ? esc(st.cite) : ''} ${(st.links||[]).map(link).join(' · ')}</p>` : ''}</section>`;
+    return `<section class="step"><h4>${S.done[st.id] ? '☑' : '☐'} ${st.title}${['law','cond','opt'].includes(reqOf(st)) ? ` <small>[${REQ_LABEL[reqOf(st)]}]</small>` : ''}${st.due ? ` <small>(${esc(st.dueLabel || 'Due')} ${fmt(st.due)})</small>` : ''}</h4>${items.length ? `<ul class="do">${items.map((x, i) => { const h = (DO_HOW[st.id] || {})[i], ht = typeof h === 'function' ? h(c) : h; return `<li>${S.sub && S.sub[st.id + '#' + i] ? '☑' : '☐'} ${x}${ht ? `<br><small>${ht}</small>` : ''}</li>`; }).join('')}</ul>` : ''}${(st.body || '').replace(/<details([^>]*)>/g, '<details$1 open>')}${st.cite || (st.links && st.links.length) ? `<p class="cite">Sources: ${st.cite ? esc(st.cite) : ''} ${(st.links||[]).map(link).join(' · ')}</p>` : ''}</section>`;
   }
   const kd = keyDates(c).map(([d, l]) => `<tr><td>${fmt(d)}</td><td>${esc(l)}</td></tr>`).join('');
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(c.title)}: campaign plan</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#15201A}h1{font-size:28px;margin:0}h2{margin-top:28px;border-bottom:2px solid #1D5B44;padding-bottom:4px}h3{margin:18px 0 4px}h4{margin:14px 0 4px}.step{break-inside:avoid-page}table{border-collapse:collapse}td{padding:3px 10px 3px 0;border-bottom:1px solid #ddd}.cite,.note,small{color:#555;font-size:13px}ul.do{list-style:none;padding-left:4px}button{display:none}a{color:#24508F}@media print{a{color:inherit}details>summary{display:none}}</style></head><body><p style="color:#555;font-size:13px">Ballot Path Oregon · saved ${fmt(today0())} · a planning aid, not legal advice</p><h1>${esc(c.title)}</h1><p>${esc(c.cyc.electionLabel)}, ${fmtW(c.cyc.election)}. File by ${fmt(c.cyc.deadline)}, 5 p.m.</p><h2>Key dates</h2><table>${kd}</table>${body}</body></html>`;
@@ -3940,7 +3989,7 @@ function renderRoad(){
       <section class="panel tl-card"><p class="eyebrow">Key dates</p>${timelineZoom(kd)}</section>
     </div>
     <div class="road-toolbar">
-      <p class="note"><b>${doneN} of ${all.length}</b> steps done · Phase ${P.indexOf(cur) + 1} of ${P.length}</p>
+      <p class="note"><b>${doneN} of ${all.length}</b> steps done · Phase ${P.indexOf(cur) + 1} of ${P.length}</p><p class="req-key"><span class="chip req law">Required by law</span><span>${all.filter(x => reqOf(x) === 'law').length} steps</span><span class="chip req cond">Required if it applies</span><span>${all.filter(x => reqOf(x) === 'cond').length}</span><span class="chip req rec">Recommended</span><span>Good practice, your call</span></p>
       <div class="rt-acts">${jump}<button class="btn small quiet" data-act="dlCal">Dates for your calendar (.csv)</button><button class="btn small quiet" data-act="dlPlan">Save plan to print</button><button class="btn small quiet" data-act="saveBackup">Save your work</button><button class="btn small quiet" data-act="toShare">Share or restore</button></div>
       <p class="note rt-msg" id="dlMsg" role="status"></p>
     </div>
