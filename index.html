@@ -3530,6 +3530,21 @@ const OB_TYPES = {
   us_rep:{label:'U.S. representative', time:'full', hrs:'Full time', pay:'Federal salary', issues:['health','budget','safety','land']},
   us_sen:{label:'U.S. senator', time:'full', hrs:'Full time', pay:'Federal salary', issues:['health','budget','safety','land']},
 };
+/* Statewide offices are the same for every Oregon voter, so the "I know my race" path skips the ZIP code for them. */
+const OB_STATEWIDE = ['us_sen','gov','state_exec','boli'];
+function obStatewideEntry(t){
+  const f = S.intake.county && GEO.cagg[S.intake.county] ? S.intake.county : Object.keys(GEO.cagg)[0];
+  const e = findEntries(GEO.cagg[f], f, true).find(x => x.office === t);
+  return e ? obPoolOf([e], 'the state')[0] || null : null;
+}
+function obStatewide(){
+  const o = ob(), e = obStatewideEntry(o.type);
+  return `${flowStrip('office')}<section class="ob-sec">
+    <div class="ob-head"><div><p class="eyebrow">Your race</p><h2>Is this your race?</h2>
+      <p class="note" style="margin-top:6px">This is a statewide office: every Oregon voter can vote for you, so we don’t need your ZIP code. You file with the Secretary of State.</p></div></div>
+    ${e ? `<div class="ob-cards">${obCard(e, e.year, 0, 'race')}</div>` : '<p>We couldn’t find this office’s next election.</p>'}
+    <div class="ob-nav" style="margin-top:16px"><button class="btn quiet" data-obact="back">← Pick a different office</button></div></section>`;
+}
 const OB_TYPE_ORDER = ['school','special','swcd','city','pcp','mayor','county_comm','county_np','county_judge','da','state_rep','state_sen','boli','state_exec','gov','us_rep','us_sen'];
 const obTypeOf = e => e.office === 'city' && /^Mayor/.test(e.seat || '') ? 'mayor' : e.office;
 /* "Help me decide": five topics, one per screen. Each has what to expect (facts the plan's own steps cite), honest questions
@@ -3644,8 +3659,8 @@ function obInterview(){
   const chip = (attr, v, l, on) => `<button class="ob-chip" ${attr}="${v}" aria-pressed="${on}"><span class="ob-ck" aria-hidden="true">${on ? '✓' : ''}</span>${l}</button>`;
   if (key === 'type'){
     ok = !!o.type;
-    body = `<h1>What are you running for?</h1><p class="why">Pick the kind of office. Next we’ll find your exact seat.</p>
-      <div class="ob-rows">${OB_TYPE_ORDER.map(t => `<button class="ob-row" data-obtype="${t}" aria-pressed="${o.type === t}"><b>${esc(OB_TYPES[t].label)}</b><span>${esc(OFFICE_DESC[t] || (t === 'mayor' ? 'Leads the city council and speaks for the city. The city charter sets the mayor’s powers, term, and pay.' : t === 'county_np' ? 'Runs a county department such as the jail, elections, or property assessment. Four-year term.' : ''))}</span></button>`).join('')}</div>`;
+    body = `<h1>What are you running for?</h1><p class="why">Pick the kind of office. Next we’ll find your exact seat. Statewide offices don’t need a ZIP code.</p>
+      <div class="ob-rows">${OB_TYPE_ORDER.map(t => `<button class="ob-row" data-obtype="${t}" aria-pressed="${o.type === t}"><b>${esc(OB_TYPES[t].label)}${OB_STATEWIDE.includes(t) ? ' <span class="ob-bdg">Statewide: no ZIP code needed</span>' : ''}</b><span>${esc(OFFICE_DESC[t] || (t === 'mayor' ? 'Leads the city council and speaks for the city. The city charter sets the mayor’s powers, term, and pay.' : t === 'county_np' ? 'Runs a county department such as the jail, elections, or property assessment. Four-year term.' : ''))}</span></button>`).join('')}</div>`;
   } else if (key === 'zip'){
     const z = o.zip || S.intake.zip || ''; ok = /^\d{5}$/.test(z);
     const ready = o.door === 'ready';
@@ -3675,7 +3690,7 @@ function obInterview(){
     <div class="ob-q">${body}</div>
     ${o.door !== 'ready' ? '<p class="note" style="text-align:center">Rather look around first? <button class="linkbtn" data-obact="browse">Skip the questions and browse every kind of office</button></p>' : ''}
     <div class="ob-nav"><button class="btn quiet" data-obact="back">← Back</button>
-      <span>${key === 'ident' ? '<button class="linkbtn" data-obact="next">Skip</button> &nbsp; ' : key === 'zip' ? `<button class="linkbtn" data-obact="skipzip">${o.door === 'ready' ? 'I’ll add it later' : 'Skip for now: show typical offices'}</button> &nbsp; ` : ''}<button class="btn primary" data-obact="next" ${ok ? '' : 'disabled'}>${last ? (o.door === 'ready' ? 'Find my seat' : 'See my matches') : 'Continue'} →</button></span></div>
+      <span>${key === 'ident' ? '<button class="linkbtn" data-obact="next">Skip</button> &nbsp; ' : key === 'zip' ? `<button class="linkbtn" data-obact="skipzip">${o.door === 'ready' ? 'I’ll add it later' : 'Skip for now: show typical offices'}</button> &nbsp; ` : ''}<button class="btn primary" data-obact="next" ${ok ? '' : 'disabled'}>${key === 'type' && OB_STATEWIDE.includes(o.type) ? 'Show this race' : last ? (o.door === 'ready' ? 'Find my seat' : 'See my matches') : 'Continue'} →</button></span></div>
   </section>`;
 }
 function obHelp(h){
@@ -3843,7 +3858,8 @@ function renderFind(){
   const s = S.intake, zip = (s.zip || '').trim();
   const O = ob();
   if (O.screen === 'commit' && hasRace()){ $('#view-find').innerHTML = obCommit(); return; }
-  if (O.screen === 'welcome'){ $('#view-find').innerHTML = obWelcome(); return; }   // the opening page, even after a search; nothing is cleared
+  if (O.screen === 'welcome'){ $('#view-find').innerHTML = obWelcome(); return; }
+  if (O.screen === 'statewide'){ $('#view-find').innerHTML = obStatewide(); return; }   // the opening page, even after a search; nothing is cleared
   if (O.screen === 'interview' || O.screen === 'readiness'){
     $('#view-find').innerHTML = O.screen === 'interview' ? obInterview() : obReadiness();
     const z = $('#obZip'); if (z){ z.focus(); z.setSelectionRange(z.value.length, z.value.length); }
@@ -4951,11 +4967,12 @@ function obClick(t){
   }
   const a = d.obact, Q = obQuestions(), q = o.q || 0;
   if (a === 'next'){
+    if (Q[q] === 'type' && OB_STATEWIDE.includes(o.type)) return goTo('statewide');
     if (Q[q] === 'zip'){ const err = runZip(($('#obZip') || {}).value); if (err){ o.zipErr = err; rf(); } return; }
     if (q < Q.length - 1) return goTo('interview', {q: q + 1});
     return;
   }
-  if (a === 'back'){ if (q > 0) return goTo('interview', {q: q - 1}); if (o.door === 'decide') return goTo('readiness'); return goTo(hasCounty() ? 'results' : 'welcome'); }
+  if (a === 'back'){ if (o.screen === 'statewide') return goTo('interview', {q:0}); if (q > 0) return goTo('interview', {q: q - 1}); if (o.door === 'decide') return goTo('readiness'); return goTo(hasCounty() ? 'results' : 'welcome'); }
   if (a === 'skipzip') return goTo('typical', {zipErr:''});
   if (a === 'browse') return hasCounty() ? goTo('results', {browse:true}) : goTo('typical', {browse:true});
   if (a === 'tointerview') return goTo('interview', {door: o.door === 'decide' ? 'decide' : 'explore', q:0, browse:false});
