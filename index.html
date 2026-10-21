@@ -5060,7 +5060,7 @@ document.addEventListener('click', async e => {
     const r = cal ? await offerFile(`ballot-path-${slug}-dates.csv`, calendarCsv(c), 'text/csv') : await offerFile(`ballot-path-${slug}-plan.html`, planHtml(c), 'text/html');
     if (m) m.textContent = r === 'saved' ? (cal ? 'Saved. In Google Calendar: Settings, then Import & export, then Import. Outlook imports it too.' : 'Saved. Open the file in any browser and print it, or keep it as a copy of your plan.') : r === 'declined' ? '' : r === 'busy' ? 'A save is already waiting for your answer.' : 'This view couldn’t save a file. Open the app in its own tab and try again.'; return; }
   if (t.dataset.act === 'toggleSetup'){ S.setupOpen = !S.setupOpen; save(); renderRoad(); if (!S.setupOpen) window.scrollTo({top:0}); return; }
-  if (t.dataset.act === 'manual'){ S.intake.isExample = false; S.intake.picked = false; S.intake.manual = true; S.setupOpen = true; save(); render(); return; }
+  if (t.dataset.act === 'manual'){ S.intake.isExample = false; S.intake.picked = false; S.intake.manual = true; S.setupOpen = true; setTab('road'); const f = $('#setupForm'); if (f){ f.scrollIntoView({block:'start'}); const o = $('#office'); if (o) o.focus({preventScroll:true}); } return; }
   if (t.dataset.act === 'eligMore'){ S.eligMore = !S.eligMore; save(); renderFind(); return; }
   if (t.dataset.act === 'editAddr'){ S.addrEdit = true; save(); renderFind(); $('#addrIn') && $('#addrIn').focus(); return; }
   if (t.dataset.act === 'resMore'){ S.resMore = !S.resMore; if (!S.resMore && S.quals){ delete S.quals.rCity; delete S.quals.rCo; delete S.quals.rOR; } save(); renderFind(); return; }
