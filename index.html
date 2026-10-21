@@ -377,13 +377,13 @@ tr.click:hover td{background:var(--sunk)}
 
 
 /* ===== Find: address + ladder ===== */
-.find-in{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,150px) auto;gap:12px 14px;align-items:end}
+.find-in{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1.6fr) auto;gap:12px 14px;align-items:end}
 .find-in .zipbox{font-size:20px;letter-spacing:.08em;padding:9px 12px}
 #addrIn{font-size:18px;padding:10px 12px}
 .fi-go .btn{padding:11px 18px}
 .fi-county{grid-column:1 / 2}
 .fi-note{grid-column:1 / -1}
-@media (max-width:700px){.find-in{grid-template-columns:minmax(0,1fr) minmax(0,120px)}.fi-go{grid-column:1 / -1}.fi-go .btn{width:100%;justify-content:center}.fi-county{grid-column:1 / -1}}
+@media (max-width:700px){.find-in{grid-template-columns:minmax(0,1fr)}.fi-go{grid-column:1 / -1}.fi-go .btn{width:100%;justify-content:center}.fi-county{grid-column:1 / -1}}
 .linkbtn{appearance:none;border:0;background:none;color:var(--link);font:inherit;text-decoration:underline;cursor:pointer;padding:0}
 .cands{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .where{justify-content:space-between}
@@ -477,6 +477,19 @@ tr.click:hover td{background:var(--sunk)}
 
 /* ===== Find: empty state + three levels ===== */
 .find-empty{margin-top:18px;display:grid;gap:14px}
+/* Get started: the first screen, before any ZIP or address is entered. */
+.gs-hero{background:var(--hero);color:var(--hero-ink);border-radius:16px;padding:28px 26px;box-shadow:var(--shadow);display:grid;gap:14px}
+.gs-hero h1{font-size:clamp(28px,5vw,44px);font-weight:800;font-stretch:82%;letter-spacing:-.015em;line-height:1.05;margin:0}
+.gs-lede{max-width:62ch;font-size:16px;opacity:.92;margin:0}
+.gs-hero .find-in{color:var(--ink);margin-top:4px}
+.gs-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin-top:16px}
+.gs-cards > div{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r2);padding:16px;box-shadow:var(--shadow);display:grid;gap:4px;align-content:start}
+.gs-cards b{font-size:15px}
+.gs-cards p{margin:0;font-size:14px;color:var(--muted)}
+.gs-alt{margin-top:16px;display:grid;gap:8px}
+.gs-alt .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.gs-alt select{width:auto;min-width:200px}
+.task{scroll-margin-top:84px}
 .fe-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px}
 .fe-steps > div{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--rule);border-radius:var(--r2);padding:16px;box-shadow:var(--shadow)}
 .fe-n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--fir);color:var(--fir-ink);font:600 13px/28px var(--mono);text-align:center}
@@ -1196,12 +1209,12 @@ function buildPlan(c){
   } else if (o.id === 'swcd'){
     const up = c.swcd ? swcdUp(c.swcd, cyc.year) : [];
     const picked = s.seatName && up.includes(s.seatName), notUp = s.seatName && c.swcd && !up.includes(s.seatName);
-    if (!picked) elig.push(step('seat', notUp ? `${esc(s.seatName)} isn’t on the ${cyc.year} ballot` : `Pick a position that’s up in ${cyc.year}`, `<p>${c.swcd ? `${esc(c.swcd)} positions on the November ${cyc.year} ballot: <b>${up.length ? up.join(', ') : 'none listed'}</b>.` : 'Pick your conservation district on the Your race tab.'} Directors serve four-year terms, so the other positions come up in ${cyc.year + 2}.</p><p class="note">From the term-expiration years in ODA’s SWCD Directory. A seat that opens early, such as a resignation, can also be on the ballot.</p>`, {links:['swcdDir']}));
+    if (!picked) elig.push(step('seat', notUp ? `${esc(s.seatName)} isn’t on the ${cyc.year} ballot` : `Pick a position that’s up in ${cyc.year}`, `<p>${c.swcd ? `${esc(c.swcd)} positions on the November ${cyc.year} ballot: <b>${up.length ? up.join(', ') : 'none listed'}</b>.` : 'Pick your conservation district under Race details on Your plan.'} Directors serve four-year terms, so the other positions come up in ${cyc.year + 2}.</p><p class="note">From the term-expiration years in ODA’s SWCD Directory. A seat that opens early, such as a resignation, can also be on the ballot.</p>`, {links:['swcdDir']}));
   } else if (kind !== 'pcp'){
-    const si = c.seatInfo, siTxt = si && si.exp ? `<p>The Oregon Blue Book lists the current term ending in January ${si.exp}, so this seat’s next regular election is ${si.up}${si.est ? ' (estimated; the listing looks out of date)' : ''}.${si.up !== cyc.year ? ` <b>That isn’t the ${cyc.year} election you picked.</b> Change the election on the Your race tab, or confirm with the clerk that the seat is open early.` : ''}</p>` : '';
+    const si = c.seatInfo, siTxt = si && si.exp ? `<p>The Oregon Blue Book lists the current term ending in January ${si.exp}, so this seat’s next regular election is ${si.up}${si.est ? ' (estimated; the listing looks out of date)' : ''}.${si.up !== cyc.year ? ` <b>That isn’t the ${cyc.year} election you picked.</b> Change the election under Race details on Your plan, or confirm with the clerk that the seat is open early.` : ''}</p>` : '';
     const probe = {office:o.id, seat:s.seatName, place:s.place, up: c.seatInfo ? c.seatInfo.up : null, badges:[], seatUps: o.id === 'county_comm' && c.county ? c.county.gov.comm.filter(x => x.t === 'Commissioner').map(x => x.up) : null};
     const u = upIn(probe, cyc.year);
-    if (u === false) elig.push(step('seat', `This seat isn’t on the ${cyc.year} ballot`, `<p>Based on the current term, ${esc(c.title)} isn’t up in ${cyc.year}. Pick another year on Find offices or Your race.</p>${siTxt}`, {links:['run']}));
+    if (u === false) elig.push(step('seat', `This seat isn’t on the ${cyc.year} ballot`, `<p>Based on the current term, ${esc(c.title)} isn’t up in ${cyc.year}. Pick another year on Find offices or under Race details.</p>${siTxt}`, {links:['run']}));
     else if (u === null) elig.push(step('seat', `Find out which seats are up in ${cyc.year}`, `<p>We don’t have the term schedule for this seat. ${o.officer === 'sos' ? 'Once filing opens, the Secretary of State lists open offices and who has filed.' : `${c.city ? esc(c.city.officer) : 'Your elections office'} can tell you which seats are on the ${cyc.year} ballot.`}</p>${siTxt}`, {links:['run']}));
     else if (o.id === 'city' && !/^Mayor/.test(s.seatName)) elig.push(step('seat', `Pick the council seat that’s up in ${cyc.year}`, `<p>Council terms are staggered, so only some seats are on the ${cyc.year} ballot. ${c.city ? esc(c.city.officer) + ' lists them in the candidate packet.' : 'The city recorder lists them in the candidate packet.'}${c.city && c.city.seats ? ' ' + esc(c.city.seats) + '.' : ''}</p>`));
   }
@@ -1292,7 +1305,7 @@ function buildPlan(c){
       {verify:'City rules change between elections. Confirm with the city recorder before you file.'});
   }
   const b = [], incNote = c.inc ? `<p>As an elected incumbent running for the same office, your deadline is 7 days before other candidates’ (${fmt(cyc.baseDeadline)}).</p>` : '';
-  const where = `<p>File with ${esc(c.officer.name)}${c.officer.addr ? `, ${esc(c.officer.addr)}` : ''}. ${esc(c.officer.how)}${c.officer.contact ? ` Questions: ${esc(c.officer.contact)}.` : ''}${c.officer.web ? ` <a href="${esc(c.officer.web)}" target="_blank" rel="noopener">County elections website</a>` : ''}</p>${o.officer === 'county' && !c.county ? `<p class="note">Choose your county on the Your race tab to see your elections office’s address and phone.</p>` : ''}${kind === 'district' ? `<p class="note">If the district crosses county lines, you usually file with the county where the district’s main office is, which may not be your county. Ask the district office.</p>` : ''}`;
+  const where = `<p>File with ${esc(c.officer.name)}${c.officer.addr ? `, ${esc(c.officer.addr)}` : ''}. ${esc(c.officer.how)}${c.officer.contact ? ` Questions: ${esc(c.officer.contact)}.` : ''}${c.officer.web ? ` <a href="${esc(c.officer.web)}" target="_blank" rel="noopener">County elections website</a>` : ''}</p>${o.officer === 'county' && !c.county ? `<p class="note">Choose your county under Race details on Your plan to see your elections office’s address and phone.</p>` : ''}${kind === 'district' ? `<p class="note">If the district crosses county lines, you usually file with the county where the district’s main office is, which may not be your county. Ask the district office.</p>` : ''}`;
   const windowTxt = cyc.opens ? `between ${fmt(cyc.opens)} and 5 p.m. on ${fmt(cyc.deadline)}` : `by 5 p.m. on ${fmt(cyc.deadline)}`;
   const openVerify = null;
 
@@ -1827,7 +1840,7 @@ function platformStep(c){
   };
   const mine = SEC[id] || SEC.NONE, others = Object.keys(SEC).filter(k => k !== (SEC[id] ? id : 'NONE') && k !== 'NONE');
   const before = c.federal ? 'Register your committee with the FEC and open the committee bank account first.' : s.money === 'under' ? 'Platforms deposit into a campaign bank account and ask for a tax ID, so you’ll need a committee first. Online giving adds up fast; if you’re staying under $1,500, checks and receipts may be simpler.' : 'Have your Statement of Organization filed and your campaign bank account open first; platforms deposit there and ask for a tax ID.';
-  const ask = np && !s.ident ? `<p class="note">${id ? 'Based on your eligibility answers. ' : ''}Set how you identify on the Your race tab to tailor this.</p>` : '';
+  const ask = np && !s.ident ? `<p class="note">${id ? 'Based on your eligibility answers. ' : ''}Set how you identify under Race details (Edit details) to tailor this.</p>` : '';
   return step('platform', 'Set up online donations', `<h4 class="pl-h">${mine[0]}</h4>${mine[1]}${ask}<p>${before} Committees get a free EIN from the IRS online.</p>${donorRules(c)}<details class="pl-more"><summary>Options if you run or identify differently</summary>${others.map(k => `<h4 class="pl-h">${SEC[k][0]}</h4>${SEC[k][1]}`).join('')}</details>`,
     {links:['actblue','actbluePrice','winred','winredFee','anedot','platforms','irsEin'], verify:'Fees and eligibility are from each platform’s own pages (ActBlue’s eligibility and pricing pages, WinRed’s 2021 fee announcement and 2020 state FAQ, Anedot’s pricing page). They change; check before you sign up.'});
 }
@@ -2540,7 +2553,7 @@ function sigStep(c){
   const who = sig.who;
   return step('sigs', need ? `Collect ${n0(need)} valid signatures` : 'Collect your signatures',
     `<p>Required: ${esc(c.sigLine)}.${c.autoSig ? ` Based on ${esc(c.autoSig.src)}.${c.autoSig.est ? ' The official count uses the November 2026 governor results, which aren’t final yet, so treat this as an estimate.' : ''}${c.autoSig.zone ? ' If your county elects commissioners by district, the count uses your district’s votes and will be lower.' : ''}` : ''}${sig.extra ? ' ' + sig.extra : ''} Only ${esc(who)} count.</p>
-     ${need ? `<p>Aim for about ${n0(target)} so rejections don’t sink you.</p>` : `<p>Enter the vote total on the Your race tab to get an exact number, or ask your filing officer for the official count.</p>`}
+     ${need ? `<p>Aim for about ${n0(target)} so rejections don’t sink you.</p>` : `<p>Enter the vote total under Race details on Your plan to get an exact number, or ask your filing officer for the official count.</p>`}
      <p>The Voters tab can list eligible signers by street.</p><p><button class="btn small" data-go="voters">Open Voters</button></p>`,
     {forms:[c.sheet], cite:sig.cite, verify: need ? 'The 30% cushion is a rule of thumb, not a requirement.' : null});
 }
@@ -2632,7 +2645,7 @@ function setupParts(){
     q.push(`<div class="q"><h3>Which party?</h3>${radios('party', [['DEM','Democratic'],['REP','Republican']], s.party)}${c.kind === 'partisan' ? `<h3 style="margin-top:6px">Are you registered with that party now?</h3>${radios('partyReg', [['yes','Yes'],['no','No'],['unsure','Not sure','Check at oregonvotes.gov']], s.partyReg)}` : ''}</div>`);
   }
   if (c.kind !== 'partisan' && c.kind !== 'pcp'){
-    q.push(`<div class="q"><h3>How do you identify politically?</h3><select id="ident" name="ident"><option value="">Choose (optional)</option>${IDENTS.map(([v,l]) => `<option value="${v}" ${s.ident === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select><p class="hint">This race is nonpartisan, so this only changes which donation platforms we suggest first.</p></div>`);
+    q.push(`<div class="q"><h3>How do you identify politically?</h3><select id="ident" name="ident"><option value="">Choose (optional)</option>${IDENTS.map(([v,l]) => `<option value="${v}" ${s.ident === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select><p class="hint">This race is nonpartisan, so your answer never appears on the ballot. It decides which party-tied options your plan shows first: donation platforms, voter data and walk apps, candidate trainings, website builders, and calling and texting tools. Options open to every campaign always show, and the others stay one click away.</p></div>`);
   }
   if (c.kind !== 'pcp'){
     q.push(`<div class="q"><h3>Do you hold this office now?</h3>${radios('incumbent', [['no','No'],['elected','Yes, I was elected','Earlier deadline under HB 4024'],['appointed','Yes, I was appointed','Same deadline as challengers']], s.incumbent)}</div>`);
@@ -2667,7 +2680,7 @@ function setupParts(){
         <div><dt>Filing window</dt><dd>${c.cyc.opens ? `${fmt(c.cyc.opens)} to ` : 'By '}${fmt(c.cyc.deadline)}, 5 p.m.${c.inc ? ' (incumbent deadline)' : ''}${c.noCityData ? ` (typical for Oregon cities, not confirmed for ${esc(c.cityName)})` : ''}</dd></div>
         <div><dt>File with</dt><dd>${esc(c.officer.name)}${c.officer.addr ? `<br><span class="note">${esc(c.officer.addr)}</span>` : ''}${c.officer.contact ? `<br><span class="note">${esc(c.officer.contact)}</span>` : ''}</dd></div>
         <div><dt>Form</dt><dd><span class="form-chip">${esc(c.form)}</span></dd></div>
-        <div><dt>Fee</dt><dd>${c.noCityData ? 'Not on file: ask the city' : c.o.id === 'swcd' ? 'None (10 signatures required)' : c.kind === 'city' && c.city ? (c.city.sigNone ? 'None' : c.city.petOnly ? 'No fee option' : c.fee != null ? money(c.fee) : 'Ask the city') : c.kind === 'city' ? 'Set by charter' : sig.none && c.kind !== 'pcp' ? 'None from you' : sig.noFee ? 'No fee option' : o.fee === 0 ? 'None' : money(o.fee)}${o.officer === 'county' && o.fee ? '<br><span class="note">Same in every county (ORS 249.056)</span>' : ''}</dd></div>
+        <div><dt>Fee</dt><dd>${c.noCityData ? 'Not on file: ask the city' : c.o.id === 'swcd' ? 'None (10 signatures required)' : c.kind === 'city' && c.city ? (c.city.sigNone ? 'None' : c.city.petOnly ? 'No fee option' : c.fee != null ? money(c.fee) : 'Ask the city') : c.kind === 'city' ? 'Set by charter' : sig.none && c.kind !== 'pcp' ? 'None from you' : sig.noFee ? 'No fee option' : o.fee === 0 ? 'None' : money(o.fee)}${o.officer === 'county' && o.fee ? `<br><span class="note">Set by state law, the same in every county (${c.kind === 'district' ? 'ORS 255.235' : 'ORS 249.056'})</span>` : ''}</dd></div>
         ${!sig.none && !sig.charter ? `<div><dt>Signatures instead</dt><dd id="sigSum">${esc(c.sigLine)}</dd></div>` : ''}
         ${c.partyDeadline ? `<div><dt>Party registration by</dt><dd>${fmt(c.partyDeadline)} <span class="note">(${rel(c.partyDeadline)})</span></dd></div>` : ''}
         <div><dt>Who can vote for you</dt><dd>${c.partyPrimary ? `Registered ${c.party} voters (closed primary)` : o.officer === 'county' && c.kind !== 'district' && c.county ? `All registered voters in ${esc(c.county.n)} County` : 'All registered voters in the district'}</dd></div>
@@ -3065,7 +3078,7 @@ function renderFind(){
     const t = A && A.tuple;
     body = `
       <div class="where"><div><p class="eyebrow">${A ? 'Offices for your address' : ZM ? 'Offices for your ZIP code' : 'Every office in the county'}</p><h2>${A ? esc(String(A.n) + ' ' + titleCase(A.street)) : ZM ? `ZIP ${esc(zip)}` : esc(k.n) + ' County'}</h2></div>
-        <span class="note">${A ? `ZIP ${esc(A.zip)} · ${A.approx ? `<b>Approximate match:</b> the nearest numbered range is ${n0(A.gap)} numbers away` : 'Matched to a Census address range'}` : ZM ? `${esc(k.n)} County · about ${n0(ZM.p)} residents (2020 Census)` : `Showing every district in ${esc(k.n)} County. <button class="linkbtn" data-act="endBrowse">Enter your address instead</button>`}</span></div>
+        <span class="note">${A ? `ZIP ${esc(A.zip)} · ${A.approx ? `<b>Approximate match:</b> the nearest numbered range is ${n0(A.gap)} numbers away` : 'Matched to a Census address range'}` : ZM ? `${esc(k.n)} County · about ${n0(ZM.p)} residents (2020 Census) · <button class="linkbtn" data-act="startOver">Start over</button>` : `Showing every district in ${esc(k.n)} County. <button class="linkbtn" data-act="endBrowse">Enter your address instead</button>`}</span></div>
       ${ZM ? `<div class="flag amber"><b>A ZIP code can cross district lines.</b> These are all the districts that cover part of ZIP ${esc(zip)}; the percentage shows how many of its residents live in each. To see only the offices at your home, add your street address above.${ZM.c.length > 1 ? `<br><span class="zc">This ZIP is in more than one county. County offices shown for: ${ZM.c.map(([cc, p]) => `<button class="pchip ${cc === county ? 'on' : ''}" data-zc="${cc}" aria-pressed="${cc === county}">${esc(GEO.counties[cc].n)} <em>${p < 1 ? '<1' : Math.round(p)}%</em></button>`).join(' ')}</span>` : ''}</div>` : ''}
       ${A ? `<div class="dchips"><span>${esc(k.n)} County</span><span>House District ${esc(t[1])}</span><span>Senate District ${esc(t[2])}</span><span>Congressional District ${esc(t[3])}</span><span>${t[4] ? esc(GEO.cities[t[4]] || t[4]) : 'Outside city limits'}${A.near || A.approx || A.zipNote ? ' (not certain)' : ''}</span>${t[5] ? `<span>${esc(GEO.schools[t[5]] || t[5])}</span>` : ''}${t[6] ? `<span>${esc(GEO.schools[t[6]] || t[6])}</span>` : ''}</div>` : ''}
       ${A && A.zipNote ? `<div class="flag amber"><b>We matched your street in ZIP ${esc(A.zip)}, not the ZIP you entered.</b> The Census data doesn’t list that street under your ZIP, but a street with the same name and house number is in ${esc(A.zip)}. That can be a different town: in testing, about 1 in 5 matches like this put the address in the wrong city. Check that the city and districts below match your voter registration card, or ask ${esc(k.n)} County Elections (${esc(k.phone)}).</div>` : ''}
@@ -3082,29 +3095,43 @@ function renderFind(){
           <span>${esc(k.phone)}</span>${k.email ? `<span>${esc(k.email)}</span>` : ''}${k.web ? `<a href="${esc(k.web)}" target="_blank" rel="noopener">Elections website</a>` : ''}
           ${LOCAL_LIMITS[county] ? `<span class="note" style="margin-top:6px">${esc(LOCAL_LIMITS[county])}</span>` : ''}
           ${k.gov.appt.length ? `<span class="note" style="margin-top:6px">Appointed here, not elected: ${esc(k.gov.appt.join(', '))}.</span>` : ''}</div></section>`;
-  } else {
-    const cOpts = Object.entries(GEO.counties).sort((a,b) => a[1].n.localeCompare(b[1].n)).map(([f,k]) => `<option value="${f}">${esc(k.n)}</option>`).join('');
-    body = `<section class="find-empty">
-      <div class="fe-steps">
-        <div><span class="fe-n">1</span><p><b>Enter your ZIP code.</b> Add your street address to match your exact districts, or leave it blank to see every district in your ZIP.</p></div>
-        <div><span class="fe-n">2</span><p><b>See every office on your ballot,</b> from precinct committeeperson to U.S. Senate, grouped local, state, and federal.</p></div>
-        <div><span class="fe-n">3</span><p><b>Pick one to plan.</b> Your checklist fills in the forms, fees, and deadlines.</p></div>
-      </div>
-      <p class="note fe-alt"><label for="browseCounty">Rather not use your address? Browse a whole county:</label> <select id="browseCounty"><option value="">Choose a county</option>${cOpts}</select></p>
-    </section>`;
   }
   const am = addrMsg;
   const found = !!(s.addr && s.addr.tuple && !S.addrEdit);
-  $('#view-find').innerHTML = `
-    ${flowStrip(hasRace() || found || s.browseCounty ? 'office' : 'address')}
-    ${found ? '' : `<div class="view-head"><div><p class="eyebrow">Start here</p><h1>What can you run for?</h1></div><p>Enter your ZIP code to see every office you can run for, from your precinct to Congress. Add your street address for an exact match.</p></div>`}
-    ${found ? `<div class="panel addr-bar"><span class="note">Your address</span><b>${esc(s.addrQ || '')}</b><span class="note">ZIP ${esc(zip)}</span><button class="linkbtn" data-act="editAddr">Change address</button></div>` : ''}
-    <form class="panel find-in" id="findForm" onsubmit="return false" ${found ? 'hidden' : ''}>
-      <div class="fi-addr"><label class="lab" for="addrIn">Street address <span class="note">(optional)</span></label><input type="text" id="addrIn" list="streetList" autocomplete="street-address" value="${esc(s.addrQ || '')}" placeholder="1234 NE Alder St"><datalist id="streetList"></datalist></div>
+  const form = `<form class="panel find-in" id="findForm" onsubmit="return false" ${found ? 'hidden' : ''}>
       <div><label class="lab" for="zipIn">ZIP code</label><input type="text" class="zipbox" id="zipIn" inputmode="numeric" maxlength="5" autocomplete="postal-code" value="${esc(zip)}" placeholder="97301"></div>
+      <div class="fi-addr"><label class="lab" for="addrIn">Street address <span class="note">(optional, for exact districts)</span></label><input type="text" id="addrIn" list="streetList" autocomplete="street-address" value="${esc(s.addrQ || '')}" placeholder="1234 NE Alder St"><datalist id="streetList"></datalist></div>
       <div class="fi-go"><button class="btn primary" data-act="findAddr" type="submit">Find my offices</button></div>
-      <p class="note fi-note" role="status">${am ? (am.html || esc(am)) : 'ZIP code only shows every district that covers part of your ZIP. Your address stays in this browser; it’s matched against Census street address ranges, not sent anywhere.'}</p>
-    </form>
+      <p class="note fi-note" role="status">${am ? (am.html || esc(am)) : 'A ZIP code alone shows every district that covers part of it. Add your street to narrow it to your home. Nothing you enter leaves this browser.'}</p>
+    </form>`;
+  if (!county){
+    // Get started: the introductory page, shown until a ZIP, address, or county is chosen.
+    const cOpts = Object.entries(GEO.counties).sort((a,b) => a[1].n.localeCompare(b[1].n)).map(([f,k]) => `<option value="${f}">${esc(k.n)}</option>`).join('');
+    $('#view-find').innerHTML = `
+      ${flowStrip('address')}
+      <section class="gs-hero">
+        <p class="eyebrow light">Get started</p>
+        <h1>Thinking about running for office in Oregon?</h1>
+        <p class="gs-lede">Start with your ZIP code. You’ll see every office on your ballot, from precinct committeeperson to U.S. Senate, and get a dated, step-by-step plan for the one you choose: eligibility, filing, money, the voters’ pamphlet, campaigning, and Election Day.</p>
+        ${form}
+      </section>
+      <div class="gs-cards">
+        <div><b>1. Find what you can run for</b><p>Every office covering your ZIP or address, with which ones are on the ballot each year and whether you qualify.</p></div>
+        <div><b>2. Get your plan</b><p>The forms, fees, signatures, and deadlines for your race, in order, with a checklist you can work through.</p></div>
+        <div><b>3. Run the campaign</b><p>Templates, past results, voter lists and walk lists, and a campaign mix suited to the office.</p></div>
+      </div>
+      <div class="gs-alt">
+        <div class="row note"><label for="browseCounty">Rather not enter a ZIP? Browse a whole county:</label> <select id="browseCounty"><option value="">Choose a county</option>${cOpts}</select></div>
+        <div class="row note">Already know your race? <button class="linkbtn" data-act="manual">Set it up by hand</button> · New to all this? <button class="linkbtn" data-tab="learn">Learn how Oregon elections work</button></div>
+        <p class="note">Free, with no accounts or tracking. A planning guide, not legal advice: your filing officer has the final word.</p>
+      </div>`;
+    fillStreetList(zip);
+    return;
+  }
+  $('#view-find').innerHTML = `
+    ${flowStrip('office')}
+    ${found ? `<div class="panel addr-bar"><span class="note">Your address</span><b>${esc(s.addrQ || '')}</b><span class="note">ZIP ${esc(zip)}</span><button class="linkbtn" data-act="editAddr">Change address</button></div>` : ''}
+    ${form}
     ${body}`;
   fillStreetList(zip);
 }
@@ -3200,7 +3227,7 @@ function flowStrip(stage){
   const s = S.intake;
   const addrDone = !!(s.addr || s.browseCounty || s.zipMode), officeDone = hasRace();
   const st = [
-    ['Address', addrDone, 'find', stage === 'address'],
+    ['Get started', addrDone, 'find', stage === 'address'],
     ['Office', officeDone, 'find', stage === 'office'],
     ['Plan', false, officeDone ? 'road' : '', stage === 'plan'],
   ];
@@ -3652,7 +3679,7 @@ function renderVoters(){
           <div class="tile"><div class="k">Doors</div><div class="v">${n0(data.hhs.length)}</div><div class="s">${n0(data.turfs.length)} walk lists</div></div>
           <div class="tile"><div class="k">Knocked</div><div class="v">${n0(st.knocked)}</div><div class="s">${st.knocked ? Math.round(st.talkedDoors / st.knocked * 100) + '% with a conversation' : 'none yet'}</div></div>
           ${mode === 'petition'
-            ? `<div class="tile"><div class="k">Signatures</div><div class="v">${n0(st.sigs)}</div><div class="s">${need ? `need ${n0(need)} · aim ${n0(target)}` : 'enter vote total on Your race'}</div></div>`
+            ? `<div class="tile"><div class="k">Signatures</div><div class="v">${n0(st.sigs)}</div><div class="s">${need ? `need ${n0(need)} · aim ${n0(target)}` : 'enter the vote total under Race details'}</div></div>`
             : `<div class="tile"><div class="k">Supporters</div><div class="v">${n0(st.sup)}</div><div class="s">rated 1 or 2</div></div>`}
         </div>
 
@@ -3839,7 +3866,7 @@ function renderSources(){
     ['Local contribution limits', 'Multnomah County and City of Portland voter-approved limits, from news coverage of the 2020 Oregon Supreme Court ruling. Other cities and counties may have their own.'],
     ['Elected county offices and term dates', 'Oregon Blue Book county pages (Secretary of State), pulled October 18, 2026. An office listed with a term-end year is treated as elected; one without is treated as appointed.'],
     ['Circuit court judicial districts', 'Oregon Blue Book circuit court judge list: district, counties served, and term end dates. Seats ending January 2029 are counted as on the 2028 ballot.'],
-    ['Partisan or nonpartisan commission', 'Partisan: Benton, Deschutes, Jackson, Malheur, Marion. Nonpartisan: Clackamas, Columbia, Coos, Crook, Douglas, Hood River, Jefferson, Josephine, Klamath, Lane, Lincoln, Linn, Multnomah, Polk, Tillamook, Union, Wasco, Washington, Yamhill. Sources: county results and sample ballots, county ordinances and measures, and local news, listed per county on the Your race tab.'],
+    ['Partisan or nonpartisan commission', 'Partisan: Benton, Deschutes, Jackson, Malheur, Marion. Nonpartisan: Clackamas, Columbia, Coos, Crook, Douglas, Hood River, Jefferson, Josephine, Klamath, Lane, Lincoln, Linn, Multnomah, Polk, Tillamook, Union, Wasco, Washington, Yamhill. Sources: county results and sample ballots, county ordinances and measures, and local news, listed per county under Race details on Your plan.'],
     ['City rules (67 cities)', 'The 30 largest cities, 26 of the next 30 by population, and 11 smaller cities (Madras, Prineville, Seaside, Milton-Freewater, Junction City, Philomath, Talent, Tillamook, Veneta, Hubbard, Bandon), from each city’s candidate packet, elections page, code, or filing notice (or a local news report of the city’s notice), read October 18, 2026. Each city’s checklist links its source and says how current it is. Sandy, Gladstone, Monmouth, Prineville, Fairview, Independence, and Eagle Point didn’t publish enough to add yet. The other cities use state defaults.'],
     ['City limits', 'Your house number is matched to a Census TIGER/Line 2024 address range, which bounds a Census block. That block is checked against ODOT’s statewide city limits (City_Limits, processed September 1, 2026), using a point inside the block. Tested October 18, 2026 on 4,977 random Oregon Address Points (state 9-1-1 data), comparing the app with ODOT’s limits at each address’s real location: 99.5% agreed overall, 99.7% of addresses away from a limit, and 94.3% of the 157 within 100 house numbers of one. The earlier January 2024 Census boundaries scored 99.4%, 99.7%, and 91.3%. A second pass ran the same sample, 5,891 addresses with a ZIP code, through the app’s full lookup as a person would type them: 86% matched a range exactly, 4% matched approximately (the house number falls outside every range on file, so the nearest is used), 0.5% matched the same street in a neighboring ZIP, 4.4% asked the person to pick between similar street names, and 4.7% weren’t found (mostly streets newer than the 2024 Census files). Approximate matches were wrong about 1 in 30 times when the nearest range was within 500 numbers and about 1 in 5 times beyond that; neighboring-ZIP matches were wrong 5 times in 27. The app says it isn’t certain for all of those and for addresses within 150 house numbers of a boundary on the same street, 9% of matches in all. Every wrong answer outside exact matches was flagged; unflagged answers were wrong about 1 in 400 times. Annexations after September 2026 aren’t reflected.'],
 
@@ -3881,6 +3908,15 @@ async function copyText(text, ta){
   try { await navigator.clipboard.writeText(text); return true; }
   catch(e){ if (ta){ ta.hidden = false; ta.value = text; ta.focus(); ta.select(); } return false; }
 }
+/* Open a step, expand its phase, and bring it into view. */
+function goToStep(id){
+  S.openTask = id; S.roadFilter = S.done[id] ? 'all' : (S.roadFilter || 'todo');
+  const ph = buildPlan(ctx()).find(p => p.steps.flatMap(flatSteps).some(x => x.id === id));
+  S.collapsed = S.collapsed || {}; if (ph) S.collapsed[ph.n] = false;
+  save(); renderRoad(); renderChip();
+  const el = document.getElementById('task-' + id);
+  if (el){ el.scrollIntoView({block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); el.querySelector('.task-title')?.focus({preventScroll:true}); }
+}
 document.addEventListener('click', async e => {
   if (!e.target.closest('#glPop, button.gl')) hideTerm();
   const t = e.target.closest('button, tr[data-turf], [data-tab]');
@@ -3888,11 +3924,20 @@ document.addEventListener('click', async e => {
   if (t.dataset.tab){ hideTerm(); return setTab(t.dataset.tab); }
   if (t.dataset.term != null){ showTerm(t); return; }
   if (t.dataset.tpl) return downloadTpl(t.dataset.tpl, t);
-  if (t.dataset.tick){ const id = t.dataset.tick; if (S.done[id]){ delete S.done[id]; if (S.auto && S.auto[id] === true) S.auto[id] = 'off:' + S.auto._k; } else { S.done[id] = true; if (S.openTask === id) S.openTask = ''; } save(); renderRoad(); renderChip(); return; }
+  if (t.dataset.tick){
+    const id = t.dataset.tick;
+    if (S.done[id]){ delete S.done[id]; if (S.auto && S.auto[id] === true) S.auto[id] = 'off:' + S.auto._k; save(); renderRoad(); renderChip(); return; }
+    // Finishing a step opens the next unfinished one, in plan order.
+    S.done[id] = true;
+    const all = buildPlan(ctx()).flatMap(p => p.steps.flatMap(flatSteps)), i = all.findIndex(x => x.id === id);
+    const next = all.slice(i + 1).find(x => !S.done[x.id]) || all.find(x => !S.done[x.id]);
+    if (next) return goToStep(next.id);
+    S.openTask = ''; save(); renderRoad(); renderChip(); return;
+  }
   if (t.dataset.open){ const id = t.dataset.open, cur = t.getAttribute('aria-expanded') === 'true'; S.openTask = cur ? '__none' : id; save(); renderRoad(); return; }
   if (t.dataset.phase){ S.collapsed = S.collapsed || {}; S.collapsed[t.dataset.phase] = t.getAttribute('aria-expanded') === 'true'; save(); renderRoad(); return; }
   if (t.dataset.filter){ S.roadFilter = t.dataset.filter; save(); renderRoad(); return; }
-  if (t.dataset.scrollto){ S.openTask = t.dataset.scrollto; S.roadFilter = S.done[t.dataset.scrollto] ? 'all' : (S.roadFilter || 'todo'); const ph = buildPlan(ctx()).find(p => p.steps.flatMap(flatSteps).some(x => x.id === t.dataset.scrollto)); if (ph && S.collapsed) S.collapsed[ph.n] = false; save(); renderRoad(); const el = document.getElementById('task-' + t.dataset.scrollto); if (el) el.scrollIntoView({block:'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); return; }
+  if (t.dataset.scrollto) return goToStep(t.dataset.scrollto);
   if (t.dataset.pick){
     Object.assign(S.intake, {office:t.dataset.pick, seatName:t.dataset.seat || '', county:t.dataset.county || S.intake.county, year:t.dataset.year || '', baseVotes:'', isExample:false, picked:true, distType:'', place:t.dataset.place || '', swcd:t.dataset.swcd || '', sid:t.dataset.sid || '', pos:'', tactics:{}, research:{}});
     { const qp = (S.quals || {}).party; if (qp === 'DEM' || qp === 'REP') Object.assign(S.intake, {party:qp, path:'major'}); else if (qp === 'NAV') S.intake.path = 'indep'; else if (qp === 'OTH') S.intake.path = 'minor'; }
@@ -3902,6 +3947,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.findview){ S.findView = t.dataset.findview; save(); renderFind(); return; }
   if (t.dataset.cand){ const inp = $('#addrIn'); if (inp) inp.value = t.dataset.cand; return runAddr(); }
   if (t.dataset.act === 'findAddr') return runAddr();
+  if (t.dataset.act === 'startOver'){ Object.assign(S.intake, {zipMode:'', addr:null, addrQ:'', browseCounty:''}); addrMsg = null; save(); renderFind(); renderChip(); return; }
   if (t.dataset.act === 'zipOnly'){ S.intake.addr = null; return zipSearch(S.intake.zip); }
   if (t.dataset.zc){ S.intake.county = t.dataset.zc; save(); renderFind(); renderChip(); return; }
   if (t.dataset.act === 'endBrowse'){ S.intake.browseCounty = ''; save(); renderFind(); $('#addrIn') && $('#addrIn').focus(); return; }
