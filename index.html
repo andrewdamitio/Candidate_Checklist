@@ -630,6 +630,13 @@ span.flow-b{cursor:default;opacity:.7}
 .todo-acts{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0 0 27px}
 .todo-act{appearance:none;font:500 12.5px var(--body);color:var(--fir);background:var(--fir-soft);border:0;border-radius:4px;padding:3px 8px;cursor:pointer;text-decoration:none;line-height:1.4}
 .todo-act:hover{text-decoration:underline}
+.todo-how{margin:4px 0 2px 27px;font-size:13.5px;line-height:1.5}
+.todo-how summary{cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600;list-style-position:inside}
+.todo-how[open] summary{margin-bottom:4px}
+.todo-how p{margin:0 0 6px}
+.tpl-card details{font-size:13px}
+.tpl-card details summary{cursor:pointer;font-weight:600;color:var(--fir)}
+.tpl-card details p{margin:6px 0 0;color:var(--ink)}
 details.more{border-top:1px dashed var(--rule);padding-top:6px}
 details.more > summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--fir);padding:4px 0}
 details.more > *:not(summary){margin-top:8px}
@@ -2125,6 +2132,36 @@ const TEMPLATES = [
      return docShell('Tarjetas de contribución', card.repeat(4));
    }},
 ];
+/* How to use each template, shown on the Learn tab. */
+const TPL_USE = {
+  budget:'Open it in Excel or Google Sheets. Fill in quantities and unit costs from your quotes; each line’s total, the subtotal, a 10% cushion, and the grand total calculate themselves. Add rows above the subtotal for anything missing, and use the “When it’s due” column as your cash-flow calendar.',
+  calltime:'List everyone you could ask, then sort by likely gift and call the top group first. Fill in each column as you go: the date you called, the answer, the pledge, the date the money arrived, and when you thanked them. Follow up on pledges that haven’t arrived within a week.',
+  contrib:'Print four to a page on card stock and cut them apart. Hand one to anyone giving by check or cash; it collects the name, address, and occupation your reports need. Fill in your committee name exactly as registered before printing.',
+  volsignup:'Print one for every event, house party, and door shift. The same evening, copy each name into the volunteer roster and text them a thank-you with a specific first shift.',
+  volroster:'Your master list of volunteers. Add each person with who recruited them, track their shifts, and note the last time you talked. Anyone who hasn’t done a shift in three weeks is your next call.',
+  message:'Print it or edit it in the browser. Fill in all four squares honestly, including what your opponent will say about you. Then write the three versions of your message and read the one-minute version aloud with a timer.',
+  forumprep:'Write a 60-second answer to each question, using the issues from your meeting notes. Practice them aloud, then bring the sheet to forums so your answers match what you told the last group.',
+  press:'Edit the highlighted parts in the browser: the date, your contact, two quotes, priorities, and a bio. Paste the text into the body of an email to each reporter on your contact list, with one photo attached.',
+  endorse:'Send the letter with the consent form attached. When the form comes back, use the name and title exactly as written, only in the places the endorser checked. Keep the signed forms.',
+  doorscript:'Print the script for each canvasser and practice it in pairs. Use the voter codes on your walk list, and cut out the “Sorry I missed you” notes to leave on door handles, never in mailboxes.',
+  thanks:'Use the language as a starting point, then name the specific gift or work. Handwritten notes sent within two days are remembered; form emails aren’t.',
+  contactlist:'Your county’s League chapter, papers, and party links are filled in. Add a named contact for each, who can introduce you, and what you’ll ask for. Update the status column after every conversation.',
+  optout:'Work down the list one site at a time: search your name and city, then submit the opt-out page for each listing at your address. Note the date and whether the confirmation arrived, and set a reminder to check again in three months.',
+  privacy:'Fill it in together with everyone you live with, before you announce. Sign it, and give a copy to your campaign manager and whoever posts for the campaign.',
+  threatlog:'Add a row the same day anything happens. Save originals and name the file in the log. Bring the log when you report to police or a platform, and give one trusted person access.',
+  security:'Work down the list of accounts and tick each column as you go. Do email first, since it can reset everything else. Repeat the last section whenever someone joins or leaves the campaign.',
+  timebudget:'Fill in planned hours by activity each week, then actual hours on Sunday night. If actual call time and door knocking keep falling short, change the plan or get help.',
+  personalcost:'Estimate each line per month and the number of months until the election; totals calculate themselves. Share the total with the people you live with before you decide.',
+  records:'List everything first, then search to confirm. For each item likely to come up, write the two sentences you’d say. Keep this file private and share it only with your campaign manager.',
+  accounts:'List every account, download each archive, then review and decide. Fill in the decision column before you change anything, so nothing gets deleted in a hurry.',
+  meetinglog:'Add a row for each agenda item worth noting as you watch meetings. Sort by the “Comes up again” column to find the issues you’ll be asked about.',
+  photorights:'Fill in the names, dates, and payment, and have the photographer sign before the shoot. Keep a signed copy with your campaign records. Have a lawyer review it if the shoot is paid or the photos are valuable.',
+  signlog:'Add a row for every location before the sign goes up, with the owner’s permission. Use it to plan replacements and to send your crew to every address on pickup day.',
+  training:'Run the training before each new volunteer’s first shift; it takes about 20 minutes. Print the debrief sheet for shift leads to fill in at the end of each shift.',
+  'doorscript-es':'Para voluntarios y votantes de habla hispana. Imprímalo y practíquelo en parejas. Pida a una persona bilingüe que lo revise antes de usarlo.',
+  'volsignup-es':'Imprímala para cada evento. Esa misma noche, copie cada nombre a la lista de voluntarios y envíe un mensaje con un primer turno específico.',
+  'contrib-es':'Imprima cuatro por página en cartulina. Pida a una persona bilingüe que revise el texto legal antes de imprimir, y escriba el nombre del comité exactamente como está registrado.',
+};
 function tplButtons(stepId){
   const T = TEMPLATES.filter(x => x.steps.includes(stepId));
   return T.length ? `<div class="tpl-row"><span class="lab">${T.length > 1 ? 'Templates' : 'Template'}</span>${T.map(x => `<button class="btn small quiet" data-tpl="${x.id}">${esc(x.title)}</button>`).join('')}</div>` : '';
@@ -3473,7 +3510,7 @@ function todoHtml(st){
   const items = DO[st.id]; if (!items) return '';
   S.sub = S.sub || {};
   const n = items.filter((_, i) => S.sub[st.id + '#' + i]).length;
-  return `<div class="todo"><p class="todo-h">What to do <span class="todo-n" id="todo-n-${st.id}">${n}/${items.length}</span></p><ul>${items.map((x, i) => `<li><label><input type="checkbox" data-sub="${st.id}#${i}" ${S.sub[st.id + '#' + i] ? 'checked' : ''}> <span>${x}</span></label>${todoActs(st.id, i)}</li>`).join('')}</ul></div>`;
+  return `<div class="todo"><p class="todo-h">What to do <span class="todo-n" id="todo-n-${st.id}">${n}/${items.length}</span></p><ul>${items.map((x, i) => `<li><label><input type="checkbox" data-sub="${st.id}#${i}" ${S.sub[st.id + '#' + i] ? 'checked' : ''}> <span>${x}</span></label>${todoActs(st.id, i)}${todoHow(st.id, i)}</li>`).join('')}</ul></div>`;
 }
 /* What each checklist item links to: a template (tpl), a source in LINKS (link), an outside tool (url + label), a plan step (step + label), or a tab. */
 const DO_ACT = {
@@ -3511,6 +3548,119 @@ const DO_ACT = {
   ethics:{2:{link:'ogecAdvice'}},
   after:{1:{tpl:'thanks'}},
 };
+/* How to do each checklist item: the practical detail behind the line, and how to use any linked template.
+   Each entry is HTML, or a function of the race context. Facts here repeat or apply what the step itself cites. */
+const DO_HOW = {
+  household:{
+    0:'Set aside an hour without interruptions, and go through the list in this step one item at a time. Ask each person what worries them most and what they’d want in return. Write down what you agree in the family privacy agreement, so you’re not renegotiating it in the busiest week of October.',
+    1:'Pick specific times, like Sunday and two weeknights, and put them on a shared calendar now. The final six to eight weeks are the heaviest, so agree in advance what can flex then and what never does. The weekly time budget shows whether your plan actually fits.',
+    2:'Decide person by person: photos, events, door knocking, social posts, or nothing at all. Children are the most common line; many candidates keep them out of posts and mail entirely. Write the rule into the family privacy agreement and tell whoever runs your social media.',
+    3:'Pick people who know you well and will be honest. Ask directly: “If I run, would you give $___ and an afternoon a week?” A hesitant answer from close supporters is useful to hear before you file. Put them at the top of the fundraising call sheet.',
+  },
+  hours:{
+    0:'Use the estimates in this step for your race size, then put recurring blocks on your calendar for call time, doors, and planning. Each week, compare planned and actual hours in the time budget. If you’re always short, cut tasks or recruit help rather than letting call time and doors slip; those are the work only you can do.',
+    1:'Tell your supervisor before you announce, so they hear it from you. Ask about schedule flexibility, unpaid leave, and any policy on political activity. Public employees, federal employees, and people in federally funded jobs have extra rules; see “Check whether your job limits your run.”',
+  },
+  money:{
+    0:c => `Pick an amount you could lose without regret, write it down, and tell your treasurer, so you don’t keep topping up in the final weeks. Money you put into your own campaign is reported like any other contribution${c && !c.federal ? ' and counts toward the $1,500 committee threshold' : ''}. If you’d rather be paid back later, document it as a loan from the start. The personal cost worksheet has a line for it.`,
+    1:c => `In the personal cost worksheet, estimate each month’s unpaid time off, extra childcare, mileage, and phone, then multiply by the months until the election. Campaign funds can’t replace income you lose${c && c.federal ? '' : ', and Oregon allows only occasional childcare from campaign funds'}, so plan to cover most of this yourself.`,
+  },
+  safety:{
+    0:'Rent a box at a nearby post office; you’ll need two forms of ID, one with a photo, and prices depend on box size and location. Some post offices offer street addressing, so the box can receive packages from other carriers. A private mailbox at a shipping store also works. Use the box on your committee paperwork, website, donation platform, and printed materials from day one, because the first address you file can keep showing up. Your declaration of candidacy still asks for your home address; the linked step shows how to ask that it be kept confidential.',
+    1:'A free Google Voice number forwards calls and texts to your cell, so you never give out your personal number; record a campaign voicemail greeting. Create a campaign email address, ideally on your campaign’s domain, and use it for every filing and sign-up. Turn on two-step login for both (see Lock down your accounts).',
+    2:'The opt-out tracker lists the major people-search sites and their free opt-out pages. On each site, search your name and city, then request removal of every listing that shows your address, including relatives listed at your address. Use a separate email address for the confirmation messages, note the date, and check again every three months, because sites often relist people. Also use Google’s “Results about you” tool, which removes search results showing your address or phone. Paid removal services do the same work for a yearly fee.',
+    3:'The family privacy agreement covers what stays private (your address, children’s names and schools, workplaces), how family appears in the campaign, protected time, and what to do if someone comes to the door or posts about the family. Fill it in together, sign it, and give a copy to your campaign manager and whoever runs social media.',
+    4:'Log each incident the same day in the threat log: date, where it happened, who, the exact words, and where you saved the original (a screenshot showing the date and web address, the voicemail, or the envelope). Don’t reply to the sender. Call 911 for any immediate threat; report others to local police and to the platform, and write down the report numbers. Give one trusted person access to the log, so someone besides you knows what’s happening.',
+  },
+  secure:{
+    0:'Start with your email, since it can reset every other account, then your phone carrier (add an account PIN to block SIM swaps), bank, ORESTAR or FEC filing, donation platform, domain registrar, and social accounts. Choose an authenticator app or passkey over text-message codes where offered, and save the recovery codes in your password manager. The account security checklist lists each account to tick off.',
+    1:'Pick a reputable password manager, create one long passphrase you’ll remember, and let it generate a unique password for every account. Change reused passwords first, starting with any account whose email shows up in a known breach (haveibeenpwned.com checks). Share campaign logins through the manager’s sharing feature, never by text or email.',
+    2:'Create the campaign’s email and social accounts under the campaign’s name, registered to the campaign email, not your personal one. Add team members with their own logins and roles (page admin, editor) and remove them the day they leave. That keeps your personal accounts private and lets the campaign’s accounts outlast any one volunteer.',
+  },
+  learn:{
+    0:'Most bodies post agendas a few days ahead and meeting video afterward. Watch at least one regular meeting and one budget or work session. Log each in the meeting notes template: the items, what was decided, the votes, and what the public said. Issues that keep coming back are what voters and reporters will ask you about.',
+    1:'Start with the budget message, the summary letter at the front of the budget, and find the three biggest spending areas and what’s growing fastest. Then skim six months of minutes for split votes and controversial items. Note both in the meeting log; they’re the source of your positions.',
+    2:'Ask the clerk or staff how agendas, meetings, and requests to staff work. Ask a current or former member how many hours the job takes and what they wish they’d known. Ask someone who disagrees with you what they want from the office. These are also your first working relationships if you win.',
+  },
+  vet:{
+    0:'Open the records template and write down everything you remember first: tickets, cases, lawsuits, evictions, bankruptcies, licensing complaints, in any state. Include dismissed and decades-old matters. Then check the list against the searches in the next items.',
+    1:'The Oregon Judicial Department’s free online search covers state circuit courts. It doesn’t include city municipal courts or county justice courts, so call any court where you’ve had a ticket. For other states, search each state’s court website or call the court clerk.',
+    2:'Order your DMV driving record online, and your Oregon criminal history from the State Police, to see exactly what an official check would show. The State Police request needs a fingerprint card and takes about 7 to 10 business days, so start early.',
+    3:'Search your name in quotes with your town, plus old usernames and email addresses. Check county property and assessor records, the Oregon business registry, and ORESTAR for contributions you’ve made. Ask a blunt friend to do the same search and tell you what stands out.',
+    4:'For each item likely to come up, write two sentences in the records template: what happened and what’s true now. Plan to say anything significant first, in your own words, and tell your campaign manager and treasurer so no one is surprised.',
+  },
+  scrub:{
+    0:'The accounts inventory lists common platforms. Add old usernames and email addresses, and anything your password manager remembers. Don’t skip the less obvious ones: Venmo, Strava, review sites, playlists, and dating profiles.',
+    1:'Use each platform’s “download your information” option before you change anything, and keep the copies private. If an old post resurfaces, you’ll be able to see exactly what it said and its context. Mark each one done in the inventory.',
+    2:'Read your posts the way an opponent would, using the list of red flags in this step. Ask a blunt friend to review them too. Note anything that worries you in the inventory’s “Posts to worry about” column.',
+    3:'Sort each item using the four choices in this step: keep; keep with an answer ready; make private or archive; or delete. Don’t delete anything that’s already been quoted or reported on; have your explanation ready instead. Record each decision in the inventory.',
+    4:'Google’s “Results about you” tool takes requests to remove search results that show your home address, phone, or email. It removes the result from Google, not the page itself, so also opt out at the source (see the people-search opt-out tracker in Make a safety plan).',
+  },
+  budget:{
+    0:'Search past candidates’ names in ORESTAR, open their committees, and look at their transactions. Note what they raised, what they spent, and their biggest expenses. That’s the most reliable picture of what a winning campaign for this seat costs.',
+    1:'Get quotes for your biggest items (printing, signs, mail), then enter quantities and unit costs in the budget template; the totals and the 10% cushion calculate themselves.',
+    2:'Fill in the budget template’s “When it’s due” column. Printers and the post office want payment up front, so money for a mail drop has to be in the bank weeks before it lands.',
+  },
+  asks:{
+    0:'Put everyone in the call sheet: family, friends, coworkers, neighbors, groups you belong to, your phone contacts, and your holiday card list. Don’t decide in advance who won’t give; most candidates are surprised by who says yes. Then sort it by likely gift.',
+    3:'Thank every donor within two days, by hand if you can (the thank-you notes template has starting language), and record the gift right away so your reports stay current.',
+  },
+  houseparty:{
+    2:'Print contribution cards, which collect the information the law requires from each donor, and volunteer sign-up sheets. Bring pens and a clipboard, and have the host or a friend collect checks so you can keep talking with guests.',
+    3:'Send a thank-you note to everyone who gave within two days, and a short follow-up to those who didn’t, with your donation link and one volunteer ask.',
+  },
+  recruit:{
+    2:'Print the sign-up sheet for every event and house party, and add the same fields (name, phone, email, what they’d like to do) to the volunteer form on your website.',
+    3:'Add every sign-up to the volunteer roster the day they sign up, including who recruited them. Call or text within a day and offer a specific first shift.',
+  },
+  volunteers:{
+    0:'The training template is a 20-minute agenda: why you’re running, the script, the list or app, hard doors, and the rules. Run it before each new volunteer’s first shift, and pair new people with experienced ones.',
+    2:'Use the debrief sheet at the end of every shift: doors, conversations, supporters found, one good story, and what to change. Share the totals with the group; people come back when they can see the results.',
+  },
+  message:{
+    0:'The message box worksheet has four squares: what you say about yourself, what you say about your opponent, what they say about themselves, and what they’ll say about you. Fill in all four; the bottom row shows you the attacks coming and what you’d answer.',
+    1:'The same worksheet has space for your one-sentence, one-minute, and five-minute versions. Read the one-minute version out loud and time it.',
+    2:'The door script builds on your one-minute pitch. Use it for your first 50 doors, notice where people’s attention drifts, and change those lines.',
+  },
+  photos:{0:'The photo rights agreement gives your campaign a license to use the photos and to share them with news media, endorsers, printers, and the voters’ pamphlet. Have the photographer sign it before the shoot. If they donate the shoot, record its value as an in-kind contribution; the agreement has a line for it.'},
+  press:{
+    0:'Start from the contact list template, which comes with your county’s member newspapers filled in. Find the reporter who covers your government by checking bylines on recent local government stories, and add community radio and neighborhood newsletters.',
+    1:'The press release template is filled in with your race. Add two short quotes and a short bio, and send it as plain text in the body of an email, with one photo attached and a link to your press page.',
+  },
+  forums:{0:'The forum prep worksheet lists the questions you’re most likely to get, with room for each answer. Write each to about 60 seconds, practice out loud with a friend who interrupts, and keep the sheet so your answers stay consistent everywhere.'},
+  endorse:{
+    0:'Use the contact list to list people and groups in the order you’ll ask: people voters know personally, then current and former officials, then organizations. Note each group’s questionnaire and interview deadlines.',
+    2:'The endorsement form records exactly how each endorser wants to be listed and where you may use their name. For the voters’ pamphlet, they must also sign the official consent form by the pamphlet deadline.',
+  },
+  signs:{
+    2:'Keep the sign log from the first sign: every address, the owner’s name and how they gave permission, who placed it, and when. Keep signs out of the road right-of-way, including the strip between sidewalk and curb.',
+    3:'Pick the pickup day now and put it in the sign log. Many cities require signs down within days of the election, and the log tells your crew exactly where to go.',
+  },
+  contacts:{0:'The contact list template comes with your county’s League of Women Voters chapter, local papers, and party links filled in. Add the groups you belong to and, for each, who can introduce you; a warm introduction beats a cold email.'},
+  load:{0:'On the Voters tab, load the voter list file from the Secretary of State or your county. It stays in your browser. Then choose who to visit and how many doors per walk list.'},
+  doors:{
+    0:'The Voters tab cuts walk lists from the public voter list in walking order. Print them, or open them on a phone. A party or commercial walk app is the other option (see the options in this step).',
+    3:'Mark each voter with the door script’s codes (1 strong yes to 5 no, NH for not home), and enter results in the Voters tab the same day, so the next shift skips doors you’ve already done.',
+  },
+  votegoal:{0:'“Size up your race” has past results for federal, statewide, and legislative seats, and a worksheet for other races. Enter the votes cast in this race last time and it calculates your win number.'},
+  race:{
+    2:'Search the last winner’s name in ORESTAR’s committee search, open their committee, and look at their reports’ totals and biggest expenses.',
+    3:'The Secretary of State’s candidate filing search lists everyone who has filed for state-run races. For local races, check your county or city elections office’s filing list after the deadline.',
+  },
+  oppo:{0:'Search each opponent in ORESTAR, open their committee, and read who funds them and how they spend. Large donors and outside groups tell you a lot about who’s backing them.'},
+  attacks:{0:'Use the records template from “Look up what’s public about you.” For each item that could become an attack, write the two sentences you’d say, and agree on who approves a response before you need one.'},
+  pamphlet:{1:'The endorsement form records how each endorser wants to be listed, but the pamphlet requires its own official consent form, signed and received by the deadline, or the name is removed.'},
+  phones:{2:'Register with Campaign Verify before any texting platform will send for you. It costs $95 per two-year cycle and can take up to two business days, plus the platform’s own registration, so start a few weeks ahead.'},
+  hatch:{2:'The Office of Special Counsel gives free advisory opinions on the Hatch Act. Email hatchact@osc.gov with your job title, employer, and how your position is funded, and wait for the answer before you file.'},
+  rules:{0:'The Elections Division’s online form takes signed complaints from registered Oregon voters. Attach screenshots, dates, and copies of what you saw. The person you complain about will be notified.'},
+  ethics:{2:'The Ethics Commission gives free advice by phone or email, and you can ask for it in writing. Ask before you act on anything involving gifts, your own business, or relatives.'},
+  after:{1:'The thank-you notes template has starting language for donors, volunteers, hosts, and endorsers. Name the specific gift or work, and sign by hand.'},
+};
+function todoHow(id, i){
+  const h = (DO_HOW[id] || {})[i]; if (!h) return '';
+  const txt = typeof h === 'function' ? h(hasRace() ? ctx() : null) : h;
+  return `<details class="todo-how"><summary>How to do this</summary><p>${txt}</p></details>`;
+}
 let PLAN_IDS = null;   // steps in the plan being rendered, so links to steps this race doesn't have are left out
 function todoActs(id, i){
   const a = (DO_ACT[id] || {})[i]; if (!a) return '';
@@ -3592,7 +3742,7 @@ function planHtml(c){
       : stepOut(st)).join('')}`).join('');
   function stepOut(st){
     const items = DO[st.id] || [];
-    return `<section class="step"><h4>${S.done[st.id] ? '☑' : '☐'} ${st.title}${st.due ? ` <small>(${esc(st.dueLabel || 'Due')} ${fmt(st.due)})</small>` : ''}</h4>${items.length ? `<ul class="do">${items.map((x, i) => `<li>${S.sub && S.sub[st.id + '#' + i] ? '☑' : '☐'} ${x}</li>`).join('')}</ul>` : ''}${(st.body || '').replace(/<details([^>]*)>/g, '<details$1 open>')}${st.cite || (st.links && st.links.length) ? `<p class="cite">Sources: ${st.cite ? esc(st.cite) : ''} ${(st.links||[]).map(link).join(' · ')}</p>` : ''}</section>`;
+    return `<section class="step"><h4>${S.done[st.id] ? '☑' : '☐'} ${st.title}${st.due ? ` <small>(${esc(st.dueLabel || 'Due')} ${fmt(st.due)})</small>` : ''}</h4>${items.length ? `<ul class="do">${items.map((x, i) => { const h = (DO_HOW[st.id] || {})[i], ht = typeof h === 'function' ? h(c) : h; return `<li>${S.sub && S.sub[st.id + '#' + i] ? '☑' : '☐'} ${x}${ht ? `<br><small>${ht}</small>` : ''}</li>`; }).join('')}</ul>` : ''}${(st.body || '').replace(/<details([^>]*)>/g, '<details$1 open>')}${st.cite || (st.links && st.links.length) ? `<p class="cite">Sources: ${st.cite ? esc(st.cite) : ''} ${(st.links||[]).map(link).join(' · ')}</p>` : ''}</section>`;
   }
   const kd = keyDates(c).map(([d, l]) => `<tr><td>${fmt(d)}</td><td>${esc(l)}</td></tr>`).join('');
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(c.title)}: campaign plan</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#15201A}h1{font-size:28px;margin:0}h2{margin-top:28px;border-bottom:2px solid #1D5B44;padding-bottom:4px}h3{margin:18px 0 4px}h4{margin:14px 0 4px}.step{break-inside:avoid-page}table{border-collapse:collapse}td{padding:3px 10px 3px 0;border-bottom:1px solid #ddd}.cite,.note,small{color:#555;font-size:13px}ul.do{list-style:none;padding-left:4px}button{display:none}a{color:#24508F}@media print{a{color:inherit}details>summary{display:none}}</style></head><body><p style="color:#555;font-size:13px">Ballot Path Oregon · saved ${fmt(today0())} · a planning aid, not legal advice</p><h1>${esc(c.title)}</h1><p>${esc(c.cyc.electionLabel)}, ${fmtW(c.cyc.election)}. File by ${fmt(c.cyc.deadline)}, 5 p.m.</p><h2>Key dates</h2><table>${kd}</table>${body}</body></html>`;
@@ -4035,7 +4185,7 @@ function renderLearn(){
     <p class="note" lang="es"><b>En español:</b> para leer esta guía en español, use la función de traducir de su navegador (en Chrome, haga clic derecho y elija “Traducir”). Abajo hay plantillas en español para tocar puertas, inscribir voluntarios y recibir contribuciones.</p>
     <section class="learn-sec"><h2>How Oregon elections work</h2><div class="primer">${PRIMER.map(([h, b], i) => `<details ${i === 0 ? 'open' : ''}><summary>${h}</summary>${b}</details>`).join('')}</div></section>
     <section class="learn-sec"><h2>Templates</h2><p class="note">${hasRace() ? `Filled in with your race: ${esc(ctx().title)}.` : 'Pick an office first and these fill in with your race’s details.'} Spreadsheets open in Excel or Google Sheets. Printable pages open in your browser, where you can edit the text and print, or open them in Word.</p>
-      ${stages.map(sg => `<h3 class="pl-h">${esc(sg)}</h3><div class="tpl-cards">${TEMPLATES.filter(x => x.stage === sg).map(x => `<div class="tpl-card"><h3>${esc(x.title)}</h3><span class="fmt">${esc(x.fmt)}</span><p>${esc(x.d)}</p><div><button class="btn small" data-tpl="${x.id}">Download</button></div></div>`).join('')}</div>`).join('')}</section>
+      ${stages.map(sg => `<h3 class="pl-h">${esc(sg)}</h3><div class="tpl-cards">${TEMPLATES.filter(x => x.stage === sg).map(x => `<div class="tpl-card"><h3>${esc(x.title)}</h3><span class="fmt">${esc(x.fmt)}</span><p>${esc(x.d)}</p>${TPL_USE[x.id] ? `<details><summary>How to use it</summary><p>${esc(TPL_USE[x.id])}</p></details>` : ''}<div><button class="btn small" data-tpl="${x.id}">Download</button></div></div>`).join('')}</div>`).join('')}</section>
     <section class="learn-sec"><h2>Glossary</h2><label class="lab" for="glFilter">Find a term</label><input type="search" id="glFilter" placeholder="e.g. ORESTAR, turf, in-kind" autocomplete="off">
       <dl class="gloss">${GLOSSARY.slice().sort((a, b) => a[0].localeCompare(b[0])).map(([t, d]) => `<div id="gl-${t.toLowerCase().replace(/[^a-z0-9]+/g, '-')}"><dt>${esc(t)}</dt><dd>${esc(d)}</dd></div>`).join('')}</dl>
       <p class="note">Underlined terms in your plan link here. Tap one to see its definition.</p></section>`;
