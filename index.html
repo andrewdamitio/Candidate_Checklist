@@ -640,6 +640,83 @@ span.flow-b{cursor:default;opacity:.7}
 .res-d{font-size:13px;color:var(--muted);line-height:1.4;margin-top:2px}
 .res-m{flex:none;font:500 11.5px var(--mono);color:var(--muted);white-space:nowrap}
 @media (max-width:480px){.res-m{display:none}.todo-res{margin-left:0}}
+/* Onboarding: three doors, interview, readiness, office cards, compare, and the "You're running" screen. */
+.ob-doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
+@media (max-width:820px){.ob-doors{grid-template-columns:minmax(0,1fr)}}
+.ob-door{appearance:none;text-align:left;font:inherit;color:var(--ink);border:1px solid var(--rule);background:var(--surface);border-radius:var(--r2);padding:20px;cursor:pointer;display:grid;gap:8px;align-content:start;box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
+.ob-door:hover{border-color:var(--fir);transform:translateY(-2px)}
+.ob-door svg{width:34px;height:34px;fill:none;stroke:var(--fir);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ob-door h2{font-size:20px;font-weight:750;font-stretch:90%}
+.ob-door p{color:var(--muted);font-size:14.5px;margin:0}
+.ob-door .go{margin-top:6px;font-weight:600;color:var(--fir);font-size:14px}
+.ob-tag{justify-self:start;font:600 11px var(--mono);letter-spacing:.05em;text-transform:uppercase;background:var(--gold-soft);color:var(--gold);padding:2px 7px;border-radius:4px}
+.ob-under{margin-top:14px;color:var(--muted);font-size:13.5px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.ob-iv{max-width:700px;margin:0 auto;display:grid;gap:16px}
+.ob-prog{display:flex;align-items:center;gap:12px;font:500 12px var(--mono);color:var(--muted)}
+.ob-prog .track{flex:1;height:6px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.ob-prog .track i{display:block;height:100%;background:linear-gradient(90deg,var(--moss),var(--fir));border-radius:99px;transition:width .3s}
+.ob-q{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r2);padding:24px;box-shadow:var(--shadow);display:grid;gap:14px}
+.ob-q h1{font-size:clamp(22px,3.4vw,30px);font-weight:780;font-stretch:86%}
+.ob-q .why{color:var(--muted);font-size:14px}
+.ob-zip{font:500 26px var(--mono);letter-spacing:.12em;width:170px;padding:9px 13px;border:1.5px solid var(--rule);border-radius:var(--r);background:var(--surface);color:var(--ink)}
+.ob-zip:focus{border-color:var(--fir);outline:none;box-shadow:0 0 0 3px var(--fir-soft)}
+.ob-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ob-chip{appearance:none;font:600 14px var(--body);color:var(--ink);border:1.5px solid var(--rule);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.ob-chip[aria-pressed="true"]{border-color:var(--fir);background:var(--fir-soft);color:var(--fir)}
+.ob-ck{width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-size:10px;line-height:1}
+.ob-rows{display:grid;gap:8px}
+.ob-row{appearance:none;text-align:left;font:inherit;color:var(--ink);border:1.5px solid var(--rule);background:var(--surface);border-radius:var(--r);padding:11px 14px;cursor:pointer;display:grid;gap:2px}
+.ob-row b{font-size:15px}
+.ob-row span{font-size:13.5px;color:var(--muted)}
+.ob-row[aria-pressed="true"]{border-color:var(--fir);background:var(--fir-soft)}
+.ob-nav{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.ob-err{color:var(--amber);font-size:13.5px;min-height:1.2em}
+.ob-sec{margin:18px 0 22px}
+.ob-head{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:flex-end;justify-content:space-between}
+.ob-head h2{font-size:clamp(22px,3.2vw,30px);font-weight:780;font-stretch:86%}
+.ob-basis{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.ob-basis span{font-size:12.5px;background:var(--sunk);padding:3px 9px;border-radius:99px}
+.ob-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+@media (max-width:860px){.ob-cards{grid-template-columns:minmax(0,1fr)}}
+.ob-card{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r2);box-shadow:var(--shadow);padding:18px 18px 16px;display:grid;gap:11px;align-content:start;min-width:0}
+.ob-card.sel{border-color:var(--fir);box-shadow:var(--shadow),inset 0 0 0 1px var(--fir)}
+.ob-card h3{font-size:19px;font-weight:760;font-stretch:90%}
+.ob-card .what{font-size:14.5px;margin:0}
+.ob-badges{display:flex;flex-wrap:wrap;gap:6px}
+.ob-bdg{font:600 11.5px var(--body);padding:2px 8px;border-radius:4px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.ob-bdg.first{background:var(--gold-soft);color:var(--gold)}
+.ob-bdg.fit{background:var(--fir-soft);color:var(--fir)}
+.ob-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px;border-top:1px solid var(--rule);padding-top:11px;margin:0}
+@media (max-width:480px){.ob-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ob-facts div{display:grid;gap:1px;min-width:0}
+.ob-facts dt{font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ob-facts dd{margin:0;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.ob-why{font-size:13px;color:var(--muted);margin:0}
+.ob-why b{color:var(--ink);font-weight:600}
+.ob-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.ob-tray{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:5;margin-top:14px;background:var(--surface);border:1px solid var(--fir);border-radius:var(--r2);box-shadow:0 8px 24px rgba(14,42,32,.12);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+@media (max-width:680px){.ob-tray{bottom:calc(84px + env(safe-area-inset-bottom,0px))}}
+.ob-tray .picked{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+.ob-tray .picked span{font-size:13px;background:var(--fir-soft);color:var(--fir);padding:3px 9px;border-radius:99px;font-weight:600}
+.ob-table{min-width:640px}
+.ob-table tbody th{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);width:150px;text-align:left;vertical-align:top}
+.ob-table thead th{font-family:var(--display);font-size:16px;font-weight:750;font-stretch:90%;text-align:left}
+.ob-rd{max-width:760px;margin:0 auto;display:grid;gap:12px}
+.ob-rd-item{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r2);padding:16px 18px;display:grid;gap:10px}
+.ob-rd-item h3{font-size:17px;font-weight:720;font-stretch:92%}
+.ob-rd-item p{font-size:14px;color:var(--muted);margin:0}
+.ob-verdict{border-radius:var(--r2);padding:14px 18px;border-left:4px solid var(--fir);background:var(--fir-soft)}
+.ob-verdict.wait{border-left-color:var(--gold);background:var(--gold-soft)}
+.ob-verdict h3{font-size:18px;font-weight:760;font-stretch:90%}
+.ob-verdict p{margin:4px 0 0;font-size:14px}
+.ob-miles{list-style:none;margin:16px 0;padding:6px 18px;background:var(--surface);border:1px solid var(--rule);border-radius:var(--r2);box-shadow:var(--shadow)}
+.ob-mile{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule)}
+.ob-mile:last-child{border-bottom:0}
+.ob-mile .n{width:28px;height:28px;border-radius:50%;background:var(--fir-soft);color:var(--fir);display:grid;place-items:center;font:600 12px var(--mono)}
+.ob-mile b{display:block;font-size:15px}
+.ob-mile span{font-size:13px;color:var(--muted)}
+.ob-mile time{font:500 12.5px var(--mono);color:var(--muted);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.ob-door{transition:none}.ob-prog .track i{transition:none}}
 /* Required by law vs. recommended */
 .chip.req{font-family:var(--body);font-weight:600;font-size:11.5px;letter-spacing:.01em}
 .chip.req.law{background:var(--ink);color:var(--surface)}
@@ -3381,9 +3458,255 @@ async function fillStreetList(zip){
   } catch(e) {}
 }
 
+/* ================= Onboarding: the new beginning =================
+   Three doors ask about the person first; the ZIP code comes last and runs the regular ZIP search. Results get a top section of
+   plain-language office cards (matches, browse, or "is this your race?"), with compare. Picking any office shows "You're running".
+   State lives in S.ob. Time and pay per office type are planning estimates; votes to win come from the Find offices model. */
+const OB_ISSUES = [['schools','Schools and kids'],['roads','Roads and getting around'],['parks','Parks and libraries'],['safety','Public safety'],['housing','Housing and growth'],['land','Water, land, and farms'],['budget','Taxes and budgets'],['health','Health and social services'],['fire','Fire and emergency services']];
+const OB_TIME = [['month','A few hours a month','Board meetings and some reading'],['week','A few hours a week','Most local boards and councils'],['ten','10 or more hours a week','Bigger councils and county offices'],['full','It would be my full-time job','County, state, and federal offices']];
+const OB_EXP = [['none','No, this would be my first time'],['board','I’ve served on a board, commission, or PTA'],['ran','I’ve run for office before']];
+const OB_IDENT = [['skip','Rather not say'],['NAV','Nonaffiliated or independent'],['DEM','Democrat'],['REP','Republican'],['OTH','Another party']];
+const OB_RANK = {month:1, week:2, ten:3, full:4};
+/* Office types: label, time needed, monthly hours and pay (planning estimates), the issues they decide, and whether they're a common first race. */
+const OB_TYPES = {
+  school:{label:'School board', time:'month', hrs:'15–25 hrs/month', pay:'Unpaid', issues:['schools','budget'], first:true},
+  special:{label:'Special district board (fire, water, parks, library)', time:'month', hrs:'4–10 hrs/month', pay:'Usually unpaid', issues:['fire','land','parks','budget'], first:true},
+  swcd:{label:'Soil and water conservation district director', time:'month', hrs:'4–8 hrs/month', pay:'Unpaid', issues:['land'], first:true},
+  city:{label:'City council', time:'week', hrs:'20–40 hrs/month', pay:'Set by the city charter', issues:['roads','parks','safety','housing','budget'], first:true},
+  mayor:{label:'Mayor', time:'ten', hrs:'30–50 hrs/month', pay:'Set by the city charter', issues:['roads','parks','safety','housing','budget']},
+  pcp:{label:'Precinct committeeperson', time:'month', hrs:'2–4 hrs/month', pay:'Unpaid', issues:[], first:true, party:true},
+  county_comm:{label:'County commissioner', time:'full', hrs:'Often full time', pay:'Salary set by the county', issues:['health','safety','roads','land','budget','housing']},
+  county_judge:{label:'County judge', time:'full', hrs:'Often full time', pay:'Salary set by the county', issues:['roads','land','budget']},
+  county_np:{label:'County office (sheriff, clerk, assessor, treasurer, surveyor)', time:'full', hrs:'Full time', pay:'County salary', issues:['safety','budget']},
+  da:{label:'District attorney', time:'full', hrs:'Full time', pay:'Salary', issues:['safety']},
+  state_rep:{label:'State representative', time:'full', hrs:'Full time during session', pay:'Legislative salary', issues:['schools','health','housing','budget','roads','safety']},
+  state_sen:{label:'State senator', time:'full', hrs:'Full time during session', pay:'Legislative salary', issues:['schools','health','housing','budget','roads','safety']},
+  boli:{label:'Labor commissioner', time:'full', hrs:'Full time', pay:'State salary', issues:['budget']},
+  state_exec:{label:'Secretary of State, Treasurer, or Attorney General', time:'full', hrs:'Full time', pay:'State salary', issues:['budget','safety']},
+  gov:{label:'Governor', time:'full', hrs:'Full time', pay:'State salary', issues:['schools','health','housing','budget','roads','safety','land']},
+  us_rep:{label:'U.S. representative', time:'full', hrs:'Full time', pay:'Federal salary', issues:['health','budget','safety','land']},
+  us_sen:{label:'U.S. senator', time:'full', hrs:'Full time', pay:'Federal salary', issues:['health','budget','safety','land']},
+};
+const OB_TYPE_ORDER = ['school','special','swcd','city','pcp','mayor','county_comm','county_np','county_judge','da','state_rep','state_sen','boli','state_exec','gov','us_rep','us_sen'];
+const obTypeOf = e => e.office === 'city' && /^Mayor/.test(e.seat || '') ? 'mayor' : e.office;
+const OB_READY = [
+  ['family','Your household is on board','A campaign takes evenings and weekends for months. Have you talked it through with the people you live with?','talk it through with your household'],
+  ['time','You have the time','Local offices take anywhere from a few hours a month to a full-time job, and campaigns get busiest in the six weeks before ballots go out.','block out the time'],
+  ['money','You’re comfortable with the cost','Lost work hours, childcare, travel, and any money you put in yourself. Campaign funds can’t replace lost income.','work out the personal cost'],
+  ['elig','You qualify','Registered to vote, and living in the district for the time the office requires (one year for most local offices).','confirm you qualify'],
+  ['safety','You’ve thought about safety and privacy','Your name and some personal details become public when you file. A safety plan comes first in your plan.','make a safety plan'],
+];
+const OB_ICON = {explore:'<path d="M11 4a7 7 0 1 0 4.9 12l4.1 4.1"/><circle cx="11" cy="11" r="7"/>', decide:'<path d="M12 3v18M5 7h14M7 7l-3 7h6zM17 7l-3 7h6z"/>', ready:'<path d="M4 20 10 9l3 5 2-3 5 9z"/><path d="M8 5h3"/>'};
+function ob(){ S.ob = S.ob || {}; const o = S.ob; o.issues = o.issues || []; o.ready = o.ready || {}; o.compare = o.compare || []; return o; }
+const obToDos = () => OB_READY.filter(([k]) => ['no','not'].includes(ob().ready[k]));
+const obQuestions = () => ob().door === 'ready' ? ['type','zip'] : ['issues','time','exp','ident','zip'];
+const obAnswered = () => { const o = ob(); return !o.browse && (o.issues.length || o.time); };
+
+function obWelcome(){
+  const cOpts = Object.entries(GEO.counties).sort((a,b) => a[1].n.localeCompare(b[1].n)).map(([f,k]) => `<option value="${f}">${esc(k.n)}</option>`).join('');
+  const door = (id, h, p, tag) => `<button class="ob-door" data-obdoor="${id}">${tag ? `<span class="ob-tag">${tag}</span>` : ''}<svg viewBox="0 0 24 24" aria-hidden="true">${OB_ICON[id]}</svg><h2>${h}</h2><p>${p}</p><span class="go">Start →</span></button>`;
+  return `${flowStrip('address')}
+    <section class="gs-hero"><p class="eyebrow light">Get started</p><h1>Thinking about running for office in Oregon?</h1>
+      <p class="gs-lede">You don’t need experience to run for local office. Start wherever you are: just curious, still deciding, or ready to file. You’ll end up with a dated, step-by-step plan for your race.</p></section>
+    <div class="ob-doors">
+      ${door('explore','Show me what I could run for','Tell us what you care about and how much time you have, and see the offices that fit, explained in plain language.','Most people start here')}
+      ${door('decide','Help me decide if I should run','Five honest questions about time, money, family, and safety. No office or ZIP code needed.','')}
+      ${door('ready','I know my race. Build my plan','Tell us the office, then where you live, and get every form, fee, and deadline in order.','')}
+    </div>
+    <div class="gs-alt">
+      <p class="ob-under">Just looking? <button class="linkbtn" data-obact="browse">Browse every kind of office</button> without answering any questions.</p>
+      <div class="row note"><label for="browseCounty">Or browse a whole county:</label> <select id="browseCounty"><option value="">Choose a county</option>${cOpts}</select></div>
+      <div class="row note">Already know the details? <button class="linkbtn" data-act="manual">Set up a race by hand</button> · New to all this? <button class="linkbtn" data-tab="learn">Learn how Oregon elections work</button></div>
+      <p class="note">Free, nonpartisan, with no accounts or tracking. Your work saves automatically in this browser. A planning guide, not legal advice: the official sources (your filing officer, the Elections Division, and the Ethics Commission) have the final word.</p>
+    </div>`;
+}
+function obInterview(){
+  const o = ob(), Q = obQuestions(), key = Q[o.q || 0], n = Q.length, q = o.q || 0;
+  let body = '', ok = true;
+  const chip = (attr, v, l, on) => `<button class="ob-chip" ${attr}="${v}" aria-pressed="${on}"><span class="ob-ck" aria-hidden="true">${on ? '✓' : ''}</span>${l}</button>`;
+  if (key === 'type'){
+    ok = !!o.type;
+    body = `<h1>What are you running for?</h1><p class="why">Pick the kind of office. Next we’ll find your exact seat.</p>
+      <div class="ob-rows">${OB_TYPE_ORDER.map(t => `<button class="ob-row" data-obtype="${t}" aria-pressed="${o.type === t}"><b>${esc(OB_TYPES[t].label)}</b><span>${esc(OFFICE_DESC[t] || (t === 'mayor' ? 'Leads the city council and speaks for the city. The city charter sets the mayor’s powers, term, and pay.' : t === 'county_np' ? 'Runs a county department such as the jail, elections, or property assessment. Four-year term.' : ''))}</span></button>`).join('')}</div>`;
+  } else if (key === 'zip'){
+    const z = o.zip || S.intake.zip || ''; ok = /^\d{5}$/.test(z);
+    const ready = o.door === 'ready';
+    body = `<h1>${ready ? 'Where do you live?' : 'Last question: what’s your ZIP code?'}</h1>
+      <p class="why">${ready ? `Your ZIP code tells us which ${esc((OB_TYPES[o.type] || {label:'office'}).label.toLowerCase())} seat you’d run for and who you’d file with.` : 'Which offices you can run for depends on where you live. Your ZIP code turns these matches into the offices on your ballot.'} You can add your street address afterward for exact districts.</p>
+      <div><label class="eyebrow" for="obZip">ZIP code</label><br><input id="obZip" class="ob-zip" inputmode="numeric" maxlength="5" autocomplete="postal-code" placeholder="97301" value="${esc(z)}"></div>
+      <p class="ob-err" id="obZipErr" role="status">${o.zipErr ? esc(o.zipErr) : ''}</p>`;
+  } else if (key === 'issues'){
+    ok = o.issues.length > 0;
+    body = `<h1>What do you care about most in your community?</h1><p class="why">Pick as many as you like. We’ll point you to the offices that actually make decisions about them.</p>
+      <div class="ob-chips">${OB_ISSUES.map(([v,l]) => chip('data-obissue', v, l, o.issues.includes(v))).join('')}</div>`;
+  } else if (key === 'time'){
+    ok = !!o.time;
+    body = `<h1>How much time could you give if you won?</h1><p class="why">Offices range from a few meetings a month to a full-time job. Campaigning takes time too; your plan accounts for both.</p>
+      <div class="ob-rows">${OB_TIME.map(([v,l,d]) => `<button class="ob-row" data-obtime="${v}" aria-pressed="${o.time === v}"><b>${l}</b><span>${d}</span></button>`).join('')}</div>`;
+  } else if (key === 'exp'){
+    ok = !!o.exp;
+    body = `<h1>Have you done anything like this before?</h1><p class="why">There’s no wrong answer. It helps us suggest a first race that fits.</p>
+      <div class="ob-rows">${OB_EXP.map(([v,l]) => `<button class="ob-row" data-obexp="${v}" aria-pressed="${o.exp === v}"><b>${l}</b></button>`).join('')}</div>`;
+  } else {
+    body = `<h1>How do you identify politically? <span class="note">(optional)</span></h1><p class="why">Most local offices in Oregon are nonpartisan, and this never appears anywhere. It decides which party-tied tools and trainings your plan shows first, and whether party offices apply to you.</p>
+      <div class="ob-chips">${OB_IDENT.map(([v,l]) => chip('data-obident', v, l, o.ident === v)).join('')}</div>`;
+  }
+  const last = q === n - 1;
+  return `${flowStrip('address')}<section class="ob-iv">
+    <div class="ob-prog"><span>Question ${q + 1} of ${n}</span><span class="track"><i style="width:${(q + 1) / n * 100}%"></i></span></div>
+    <div class="ob-q">${body}</div>
+    ${o.door !== 'ready' ? '<p class="note" style="text-align:center">Rather look around first? <button class="linkbtn" data-obact="browse">Skip the questions and browse every kind of office</button></p>' : ''}
+    <div class="ob-nav"><button class="btn quiet" data-obact="back">← Back</button>
+      <span>${key === 'ident' ? '<button class="linkbtn" data-obact="next">Skip</button> &nbsp; ' : key === 'zip' ? `<button class="linkbtn" data-obact="skipzip">${o.door === 'ready' ? 'I’ll add it later' : 'Skip for now: show typical offices'}</button> &nbsp; ` : ''}<button class="btn primary" data-obact="next" ${ok ? '' : 'disabled'}>${last ? (o.door === 'ready' ? 'Find my seat' : 'See my matches') : 'Continue'} →</button></span></div>
+  </section>`;
+}
+function obReadiness(){
+  const o = ob(), done = OB_READY.every(([k]) => o.ready[k]), no = obToDos();
+  return `${flowStrip('address')}<section class="ob-rd">
+    <div><p class="eyebrow">Before you choose an office</p><h1 style="font-size:clamp(24px,3.6vw,34px);font-weight:780;font-stretch:86%">Are you ready to run?</h1>
+      <p class="note" style="margin-top:6px">Five honest questions, about you rather than any one office. A “not yet” isn’t a no; your plan shows how to sort each one out.</p></div>
+    ${OB_READY.map(([k, h, p]) => `<div class="ob-rd-item"><h3>${h}</h3><p>${p}</p><div class="ob-chips">${[['yes','Yes'],['not','Not sure yet'],['no','Not yet']].map(([v, l]) => `<button class="ob-chip" data-obready="${k}:${v}" aria-pressed="${o.ready[k] === v}"><span class="ob-ck" aria-hidden="true">${o.ready[k] === v ? '✓' : ''}</span>${l}</button>`).join('')}</div></div>`).join('')}
+    ${done ? (no.length ? `<div class="ob-verdict wait"><h3>${no.length === 1 ? 'One thing' : no.length + ' things'} to sort out first</h3><p>First, ${no.map(x => x[3]).join(', ')}. That’s normal, and your plan will start with ${no.length === 1 ? 'it' : 'them'}. Next, see which offices fit you.</p></div>` : '<div class="ob-verdict"><h3>You look ready</h3><p>Next, see which offices fit what you care about and the time you have.</p></div>') : ''}
+    <div class="ob-nav"><button class="btn quiet" data-obact="home">← Back</button><button class="btn primary" data-obact="tooffices" ${done ? '' : 'disabled'}>See offices that fit →</button></div>
+  </section>`;
+}
+/* Fit score: issues the office decides on, whether it fits the time offered, and a nudge toward first races for newcomers. */
+function obScore(t){
+  const o = ob(), T = OB_TYPES[t] || {}, why = []; let s = 0;
+  const hits = (T.issues || []).filter(i => o.issues.includes(i));
+  if (hits.length){ s += hits.length * 3; why.push(`<b>Decides on</b> ${hits.map(h => OB_ISSUES.find(x => x[0] === h)[1].toLowerCase()).join(', ')}`); }
+  if (o.time && T.time){ const d = OB_RANK[T.time] - OB_RANK[o.time]; if (d <= 0){ s += 3; why.push('<b>Fits</b> the time you have'); } else { s -= d * 3; why.push('<b>Needs</b> more time than you said'); } }
+  if (T.first && o.exp !== 'ran') s += 2;
+  if (T.party && !['DEM','REP','OTH'].includes(o.ident)) s -= 6;
+  return {s, why};
+}
+/* Typical filing deadline for an office in the selected year, from the same election calendar the plan uses. */
+function obDeadline(e, Y){
+  const o = e.office, cd = o === 'city' ? CITIES[e.place] : null;
+  const type = ['school','special'].includes(o) ? 'district' : o === 'swcd' ? 'general' : o === 'city' ? (cd && cd.may ? 'primary' : 'general') : (['county_comm','county_np'].includes(o) && RCV_NOV.includes(e.county)) ? 'general' : 'primary';
+  return {date: cycleFor(type, Y, false).deadline, typical: o === 'city'};
+}
+function obQualify(e){
+  const o = OFF[e.office] || {}, cd = e.office === 'city' ? CITIES[e.place] : null;
+  if (e.office === 'city') return cd ? (cd.petOnly ? 'Petition signatures' : cd.feeN != null ? `$${cd.feeN} fee or signatures` : 'Fee or signatures (city packet)') : 'Set by the city charter';
+  if (e.office === 'swcd') return '10 signatures, no fee';
+  if (e.office === 'pcp') return 'No fee; party members only';
+  return o.fee ? `$${o.fee} fee or signatures` : o.fee === 0 ? 'No fee' : 'See the candidate manual';
+}
+const obPickAttrs = e => `data-pick="${e.office}" data-seat="${esc(e.seat)}" data-county="${esc(e.county)}" data-year="${e.year || ''}" data-place="${e.place || ''}" data-swcd="${esc(e.swcd || '')}" data-sid="${e.sid || ''}"`;
+const obKey = e => e.office + '|' + e.seat;
+function obCard(e, Y, i, mode){
+  const t = obTypeOf(e), T = OB_TYPES[t] || {label:e.title}, f = obScore(t), sel = ob().compare.includes(obKey(e));
+  const cd = e.office === 'city' ? CITIES[e.place] : null, ward = cd && cd.wards && t !== 'mayor';
+  const dl = obDeadline(e, e.year || Y), votes = e.varies ? 'Varies' : e.w ? `about ${n0(roundish(e.w))}${ward ? ' citywide; fewer for a ward seat' : ''}` : '—';
+  const what = e.office === 'county_np' ? (ROLE_DESC[roleOf(e.seat)] || OFFICE_DESC.county_np || '') : t === 'mayor' ? 'Leads the city council and speaks for the city. The city charter sets the mayor’s powers, term, and pay.' : (OFFICE_DESC[e.office] || '');
+  return `<article class="ob-card ${sel ? 'sel' : ''}">
+    <div class="ob-badges">${T.first ? '<span class="ob-bdg first">Good first race</span>' : ''}${mode === 'match' && i < 3 && f.s > 0 ? '<span class="ob-bdg fit">Strong match</span>' : ''}${e.share != null && e.share < 99.5 ? `<span class="ob-bdg">Covers ${e.share < 1 ? '<1' : Math.round(e.share)}% of ${e.shareOf || 'the county'}</span>` : ''}</div>
+    <h3>${esc(e.title)}</h3>
+    <p class="what">${esc(what)}</p>
+    ${mode === 'match' && f.why.length ? `<p class="ob-why">${f.why.join(' · ')}</p>` : ''}
+    <dl class="ob-facts">
+      <div><dt>Time</dt><dd>${esc(T.hrs || '—')}</dd></div>
+      <div><dt>Pay</dt><dd>${esc(T.pay || '—')}</dd></div>
+      <div><dt>Votes to win</dt><dd>${votes} <span class="note">(est.)</span></dd></div>
+      <div><dt>On the ballot</dt><dd>${esc(e.yearTag || String(Y))}</dd></div>
+      <div><dt>Filing closes</dt><dd>${fmt(dl.date)}${dl.typical ? ' <span class="note">(typical)</span>' : ''}</dd></div>
+      <div><dt>To qualify</dt><dd>${esc(obQualify(e))}</dd></div>
+    </dl>
+    <div class="ob-acts"><button class="btn small quiet" data-obcmp="${esc(obKey(e))}" aria-pressed="${sel}">${sel ? '✓ Comparing' : 'Compare'}</button>
+      <button class="btn small ${mode === 'race' ? 'primary' : ''}" ${obPickAttrs(e)}>${mode === 'race' ? 'Yes, plan this race →' : 'Plan this race →'}</button></div>
+  </article>`;
+}
+/* Every office at this address or ZIP, each at its next election (school and district boards are elected in odd years). */
+function obPoolOf(Ebase, shareOf){
+  return Ebase.map(e => {
+    const y = ELECTION_YEARS.find(yy => upIn(e, yy) !== false); if (!y) return null;
+    const u = upIn(e, y);
+    return Object.assign({}, e, {shareOf, year:y, when: typeof e.when === 'number' ? y : e.when, yearTag: u === null ? null : electionLabel(e, y)});
+  }).filter(Boolean);
+}
+/* Top of the Find offices results: matches, browse, or "is this your race?", then compare. */
+function obResults(all, Y){
+  const o = ob(); if (!o.door && !o.browse) return '';
+  const pool = all.filter(e => OB_TYPES[obTypeOf(e)]);
+  if (o.compareOpen && o.compare.length >= 2) return obCompare(pool, Y);
+  let mode, list, head, sub = '';
+  if (o.door === 'ready' && o.type && !o.browse){
+    mode = 'race'; list = pool.filter(e => obTypeOf(e) === o.type);
+    head = list.length ? (list.length === 1 ? 'Is this your race?' : 'Which of these is your race?') : `We didn’t find a ${OB_TYPES[o.type].label.toLowerCase()} seat here in the next few elections`;
+    if (!list.length) sub = '<p class="note" style="margin-top:6px">Check the full list below, or add your street address for exact districts.</p>';
+  } else if (obAnswered()){
+    // Offices covering only a small part of the ZIP rank lower: you're less likely to live in them.
+    mode = 'match'; list = pool.map(e => ({e, s:obScore(obTypeOf(e)).s - (e.share != null && e.share < 20 ? 5 : 0)})).sort((a, b) => b.s - a.s).map(x => x.e).slice(0, o.showAll ? 99 : 4);
+    head = 'Offices that fit what you care about';
+    const basis = o.issues.map(i => OB_ISSUES.find(x => x[0] === i)[1]).concat(o.time ? [OB_TIME.find(x => x[0] === o.time)[1]] : []);
+    sub = `<div class="ob-basis">${basis.map(b => `<span>${esc(b)}</span>`).join('')}<button class="linkbtn" data-obact="edit" style="font-size:12.5px">Change answers</button></div>`;
+  } else {
+    mode = 'browse'; list = pool.filter(e => (OB_TYPES[obTypeOf(e)] || {}).first);
+    head = 'Good first races on your ballot';
+    sub = '<p class="note" style="margin-top:6px">Every office is listed below. <button class="linkbtn" data-obact="tointerview">Answer a few questions to find your best matches</button></p>';
+  }
+  const tray = o.compare.length ? `<div class="ob-tray"><span class="eyebrow">Compare</span><div class="picked">${o.compare.map(k => { const e = pool.find(x => obKey(x) === k); return e ? `<span>${esc(e.title)}</span>` : ''; }).join('')}</div>
+    <button class="btn small quiet" data-obact="clearcmp">Clear</button><button class="btn small primary" data-obact="compare" ${o.compare.length < 2 ? 'disabled' : ''}>${o.compare.length < 2 ? 'Pick 2 or 3 to compare' : `Compare ${o.compare.length} side by side`}</button></div>` : '';
+  return `<section class="ob-sec"><div class="ob-head"><div><h2>${esc(head)}</h2>${sub}</div>
+      <p class="note" style="max-width:42ch">“Good first race” marks offices with small electorates, low cost, and part-time hours. Time, pay, and votes to win are planning estimates.</p></div>
+    ${list.length ? `<div class="ob-cards">${list.map((e, i) => obCard(e, Y, i, mode)).join('')}</div>` : ''}
+    ${mode === 'match' && !o.showAll && pool.length > 4 ? `<p style="margin-top:12px"><button class="btn small quiet" data-obact="all">Show all ${pool.length} matches, ranked</button></p>` : ''}
+    ${tray}</section>`;
+}
+function obCompare(pool, Y){
+  const C = ob().compare.map(k => pool.find(e => obKey(e) === k)).filter(Boolean);
+  const T = e => OB_TYPES[obTypeOf(e)] || {};
+  const rows = [['What it does', e => e.office === 'county_np' ? (ROLE_DESC[roleOf(e.seat)] || '') : (OFFICE_DESC[e.office] || '')], ['Time', e => T(e).hrs], ['Pay', e => T(e).pay], ['Votes to win', e => e.w ? `about ${n0(roundish(e.w))} (est.)` : '—'], ['On the ballot', e => e.yearTag || String(e.year || Y)], ['Filing closes', e => fmt(obDeadline(e, e.year || Y).date)], ['To qualify', e => obQualify(e)], ['Good first race', e => T(e).first ? 'Yes' : 'Usually not']];
+  return `<section class="ob-sec"><div class="ob-head"><h2>Compare ${C.length} offices</h2><button class="btn small quiet" data-obact="closecmp">← Back to offices</button></div>
+    <div class="tablewrap" style="margin-top:12px"><table class="ob-table"><thead><tr><th></th>${C.map(e => `<th scope="col">${esc(e.title)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(([h, f]) => `<tr><th scope="row">${h}</th>${C.map(e => `<td>${esc(f(e) || '—')}</td>`).join('')}</tr>`).join('')}
+    <tr><th scope="row"></th>${C.map(e => `<td><button class="btn small primary" ${obPickAttrs(e)}>Plan this race</button></td>`).join('')}</tr></tbody></table></div></section>`;
+}
+/* No ZIP code: typical Oregon offices, ranked if the person answered questions. */
+function obTypical(){
+  const o = ob(), ready = o.door === 'ready' && o.type;
+  const types = ready ? [o.type] : obAnswered() ? OB_TYPE_ORDER.slice().sort((a, b) => obScore(b).s - obScore(a).s) : OB_TYPE_ORDER.filter(t => OB_TYPES[t].first).concat(OB_TYPE_ORDER.filter(t => !OB_TYPES[t].first));
+  const card = (t, i) => { const T = OB_TYPES[t], f = obScore(t); return `<article class="ob-card">
+    <div class="ob-badges">${T.first ? '<span class="ob-bdg first">Good first race</span>' : ''}${obAnswered() && i < 3 && f.s > 0 ? '<span class="ob-bdg fit">Strong match</span>' : ''}</div>
+    <h3>${esc(T.label)}</h3><p class="what">${esc(OFFICE_DESC[t] || (t === 'mayor' ? 'Leads the city council and speaks for the city. The city charter sets the mayor’s powers, term, and pay.' : 'Runs a county department such as the jail, elections, or property assessment. Four-year term.'))}</p>
+    ${obAnswered() && f.why.length ? `<p class="ob-why">${f.why.join(' · ')}</p>` : ''}
+    <dl class="ob-facts"><div><dt>Time</dt><dd>${esc(T.hrs)}</dd></div><div><dt>Pay</dt><dd>${esc(T.pay)}</dd></div><div><dt>Dates and votes</dt><dd>Depend on where you live</dd></div></dl>
+    <div class="ob-acts"><span></span><button class="btn small" data-gpick="${t}">Plan this race →</button></div></article>`; };
+  return `${flowStrip('address')}<section>
+    <div class="ob-head"><div><p class="eyebrow">${ready ? 'Your race' : obAnswered() ? 'Your matches' : 'Browse'}</p><h1 style="font-size:clamp(24px,3.6vw,34px);font-weight:780;font-stretch:86%">${ready ? 'Here’s what this office involves' : obAnswered() ? 'Offices that fit what you care about' : 'Every kind of office you could run for'}</h1>
+      ${!ready && !obAnswered() ? '<p class="note" style="margin-top:6px">Good first races are listed first. <button class="linkbtn" data-obact="tointerview">Answer a few questions to find your best matches</button></p>' : ''}</div></div>
+    <div class="ob-verdict wait" style="margin-top:14px"><h3>${ready ? 'Add your ZIP code to find your exact seat' : 'These are typical Oregon offices'}</h3><p>${ready ? 'Without it, we can show what the office involves, but not your filing officer, dates, or the seat you’d file for.' : 'Add your ZIP code to see the ones on your ballot, with real dates and deadlines.'}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin-top:10px"><div><label class="eyebrow" for="obZip2">ZIP code</label><br><input id="obZip2" class="ob-zip" style="font-size:20px;width:140px" inputmode="numeric" maxlength="5" placeholder="97301"></div><button class="btn primary" data-obact="zipgo">Show my ballot</button><button class="btn quiet" data-obact="home">Start over</button></div><p class="ob-err" id="obZipErr2" role="status"></p></div>
+    <div class="ob-cards">${types.map(card).join('')}</div></section>`;
+}
+/* "You're running": the picked race with its real dates, and any readiness to-dos as the first milestone. */
+function obCommit(){
+  const c = ctx(), no = obToDos();
+  const M = [['Decide', no.length ? `First: ${no.map(x => x[3]).join(', ')}. Then a safety plan and locked-down accounts.` : 'Safety plan and accounts locked down', 'Now'],
+    ['Get ready', 'Learn the job, size up the race, set up campaign money', c.cyc.opens && daysTo(c.cyc.opens) > 0 ? 'Before ' + fmt(c.cyc.opens) : 'Now'],
+    ['File', 'Get on the ballot', 'By ' + fmt(c.cyc.deadline)],
+    ['Campaign', 'Message, volunteers, doors, and voters', 'Until ' + fmt(addDays(c.cyc.election, -20))],
+    ['Vote', 'Ballots mail out about three weeks before Election Day', fmt(c.cyc.election)]];
+  return `${flowStrip('office')}<section style="max-width:780px;margin:0 auto">
+    <div class="race-hero" style="grid-template-columns:minmax(0,1fr)"><div><p class="eyebrow light">You’re running</p><h1>${esc(c.title)}</h1>
+      <p class="rh-seat">${esc(c.cyc.electionLabel)}, ${fmtW(c.cyc.election)}${S.intake.picked ? '' : ' · dates are typical until you add your county and seat'}</p>
+      <p class="rh-desc">Here’s the road from today to the ballot. Your plan breaks each part into steps and marks which ones the law requires.</p></div></div>
+    <ol class="ob-miles" aria-label="Milestones">${M.map(([h, d, t], i) => `<li class="ob-mile"><span class="n">${i + 1}</span><span><b>${h}</b><span>${esc(d)}</span></span><time>${esc(t)}</time></li>`).join('')}</ol>
+    <div class="ob-nav"><button class="btn quiet" data-obact="otheroffice">← Choose a different office</button><button class="btn primary" data-obact="openplan">Open my plan →</button></div>
+  </section>`;
+}
+
 /* ================= Find offices view ================= */
 function renderFind(){
   const s = S.intake, zip = (s.zip || '').trim();
+  const O = ob();
+  if (O.screen === 'commit' && hasRace()){ $('#view-find').innerHTML = obCommit(); return; }
+  if (O.screen === 'interview' || O.screen === 'readiness'){
+    $('#view-find').innerHTML = O.screen === 'interview' ? obInterview() : obReadiness();
+    const z = $('#obZip'); if (z){ z.focus(); z.setSelectionRange(z.value.length, z.value.length); }
+    return;
+  }
   const A = s.addr && s.addr.zip && s.addr.tuple && (s.addr.zip === zip || s.addr.zipNote) ? s.addr : null;
   const ZM = !A && s.zipMode && s.zipMode === zip && GEO.zips[zip] ? GEO.zips[zip] : null;
   const browse = !A && !ZM && s.browseCounty && GEO.counties[s.browseCounty] ? s.browseCounty : null;
@@ -3425,6 +3748,7 @@ function renderFind(){
         const q = here ? `inside ${esc(here)}` : `inside ${esc(other || 'a city')}`;
         return `<div class="flag amber"><b>We’re not entirely sure this address is ${q}.</b> ${A.near ? `It’s very close to a city boundary: within about 150 house numbers, this street ${here ? `leaves ${esc(here)}` : `enters ${esc(other)}`}.` : 'Your house number falls outside the numbered ranges on file for this street, so we used the nearest one.'} Our best answer is ${here ? `inside ${esc(here)}` : 'outside city limits'}. ${A.near ? 'In testing, about 1 in 15 addresses this close to a boundary came out wrong, compared with about 1 in 400 elsewhere.' : A.gap >= 500 ? 'The nearest range is far from your number, and in testing about 1 in 5 addresses matched this way came out in the wrong city or out of it.' : 'In testing, about 1 in 30 addresses matched this way came out wrong.'} Before you file for a city office, confirm with ${esc(k.n)} County Elections (${esc(k.phone)}). Your voter registration card also shows whether you live in the city.</div>`; })() : ''}
       ${yearBar}
+      ${obResults(obPoolOf(Ebase, ZM ? 'the ZIP' : 'the county'), Y)}
       ${eligPanel(A, county, Eall)}
       ${qs ? `<div class="elig-sum"><p><b>You meet the listed requirements for ${okN} of ${Eall.length} offices${A ? ' at your address' : ''}.</b></p><button class="btn small quiet" data-act="onlyElig">${S.onlyEligible ? 'Show all offices' : 'Hide the others'}</button></div>` : ''}
       ${levelsHtml(E)}
@@ -3444,27 +3768,8 @@ function renderFind(){
       <p class="note fi-note" role="status">${am ? (am.html || esc(am)) : 'A ZIP code alone shows every district that covers part of it. Add your street to narrow it to your home. Nothing you enter leaves this browser.'}</p>
     </form>`;
   if (!county){
-    // Get started: the introductory page, shown until a ZIP, address, or county is chosen.
-    const cOpts = Object.entries(GEO.counties).sort((a,b) => a[1].n.localeCompare(b[1].n)).map(([f,k]) => `<option value="${f}">${esc(k.n)}</option>`).join('');
-    $('#view-find').innerHTML = `
-      ${flowStrip('address')}
-      <section class="gs-hero">
-        <p class="eyebrow light">Get started</p>
-        <h1>Thinking about running for office in Oregon?</h1>
-        <p class="gs-lede">Start with your ZIP code. You’ll see every office on your ballot, from precinct committeeperson to U.S. Senate, and get a dated, step-by-step plan for the one you choose: eligibility, filing, money, the voters’ pamphlet, campaigning, and Election Day.</p>
-        ${form}
-      </section>
-      <div class="gs-cards">
-        <div><b>1. Find what you can run for</b><p>Every office covering your ZIP or address, with which ones are on the ballot each year and whether you qualify.</p></div>
-        <div><b>2. Get your plan</b><p>The forms, fees, signatures, and deadlines for your race, in order, with a checklist you can work through.</p></div>
-        <div><b>3. Run the campaign</b><p>Templates, past results, voter lists and walk lists, and a campaign mix suited to the office.</p></div>
-      </div>
-      <div class="gs-alt">
-        <div class="row note"><label for="browseCounty">Rather not enter a ZIP? Browse a whole county:</label> <select id="browseCounty"><option value="">Choose a county</option>${cOpts}</select></div>
-        <div class="row note">Already know your race? <button class="linkbtn" data-act="manual">Set it up by hand</button> · New to all this? <button class="linkbtn" data-tab="learn">Learn how Oregon elections work</button></div>
-        <p class="note">Free, with no accounts or tracking. Your work saves automatically in this browser; use <b>Save your work</b> on Your plan to keep a copy or move to another device. A planning guide, not legal advice: the official sources (your filing officer, the Elections Division, and the Ethics Commission) have the final word.</p>
-      </div>`;
-    fillStreetList(zip);
+    // Get started: the onboarding screens, until a ZIP code, address, or county is chosen.
+    $('#view-find').innerHTML = O.screen === 'typical' ? obTypical() : obWelcome();
     return;
   }
   $('#view-find').innerHTML = `
@@ -4475,6 +4780,53 @@ async function copyText(text, ta){
   try { await navigator.clipboard.writeText(text); return true; }
   catch(e){ if (ta){ ta.hidden = false; ta.value = text; ta.focus(); ta.select(); } return false; }
 }
+/* Onboarding clicks: doors, answers, navigation, compare, and picks. */
+const OB_IDENT_MAP = {NAV:'IND', OTH:'MINOR', DEM:'DEM', REP:'REP', skip:'NONE'};
+function obClick(t){
+  const o = ob(), d = t.dataset;
+  const rf = () => { save(); renderFind(); };
+  const goTo = (screen, extra) => { Object.assign(o, extra || {}); o.screen = screen; save(); renderFind(); window.scrollTo({top:0}); };
+  const hasCounty = () => !!(S.intake.addr || S.intake.zipMode || S.intake.browseCounty);
+  const runZip = z => {
+    z = String(z || '').replace(/\D/g, '').slice(0, 5);
+    if (!/^\d{5}$/.test(z)) return 'Enter all five digits of your ZIP code.';
+    if (!GEO.zips[z]) return `${z} isn’t a residential Oregon ZIP code in the Census data. Check it, or browse a county from the start page.`;
+    o.zip = z; o.zipErr = ''; o.screen = 'results'; o.compareOpen = false; save(); zipSearch(z); window.scrollTo({top:0}); return '';
+  };
+  if (d.obdoor) return d.obdoor === 'decide' ? goTo('readiness', {door:'decide', browse:false}) : goTo('interview', {door:d.obdoor, q:0, browse:false});
+  if (d.obissue){ o.issues = o.issues.includes(d.obissue) ? o.issues.filter(x => x !== d.obissue) : o.issues.concat(d.obissue); return rf(); }
+  if (d.obtime){ o.time = d.obtime; return rf(); }
+  if (d.obexp){ o.exp = d.obexp; return rf(); }
+  if (d.obident){ o.ident = d.obident; S.intake.ident = OB_IDENT_MAP[d.obident] || ''; return rf(); }
+  if (d.obtype){ o.type = d.obtype; return rf(); }
+  if (d.obready){ const [k, v] = d.obready.split(':'); o.ready[k] = v; return rf(); }
+  if (d.obcmp){ const k = d.obcmp; o.compare = o.compare.includes(k) ? o.compare.filter(x => x !== k) : o.compare.concat(k).slice(-3); return rf(); }
+  if (d.gpick){
+    const t2 = d.gpick;
+    Object.assign(S.intake, {office: t2 === 'mayor' ? 'city' : t2, seatName: t2 === 'mayor' ? 'Mayor' : '', manual:true, picked:false, isExample:false, distType:'', place:'', swcd:'', sid:'', pos:'', year:'', baseVotes:'', tactics:{}, research:{}});
+    S.setupOpen = true; S.openTask = ''; S.collapsed = {}; return goTo('commit');
+  }
+  const a = d.obact, Q = obQuestions(), q = o.q || 0;
+  if (a === 'next'){
+    if (Q[q] === 'zip'){ const err = runZip(($('#obZip') || {}).value); if (err){ o.zipErr = err; rf(); } return; }
+    if (q < Q.length - 1) return goTo('interview', {q: q + 1});
+    return;
+  }
+  if (a === 'back'){ if (q > 0) return goTo('interview', {q: q - 1}); if (o.door === 'decide') return goTo('readiness'); return goTo(hasCounty() ? 'results' : 'welcome'); }
+  if (a === 'skipzip') return goTo('typical', {zipErr:''});
+  if (a === 'browse') return hasCounty() ? goTo('results', {browse:true}) : goTo('typical', {browse:true});
+  if (a === 'tointerview') return goTo('interview', {door: o.door === 'decide' ? 'decide' : 'explore', q:0, browse:false});
+  if (a === 'tooffices') return goTo('interview', {q:0});
+  if (a === 'edit') return goTo('interview', {q:0});
+  if (a === 'home'){ S.ob = {}; Object.assign(S.intake, {zipMode:'', addr:null, browseCounty:''}); save(); renderFind(); renderChip(); window.scrollTo({top:0}); return; }
+  if (a === 'zipgo'){ const err = runZip(($('#obZip2') || {}).value); if (err){ const m = $('#obZipErr2'); if (m) m.textContent = err; } return; }
+  if (a === 'compare'){ o.compareOpen = true; return rf(); }
+  if (a === 'closecmp'){ o.compareOpen = false; return rf(); }
+  if (a === 'clearcmp'){ o.compare = []; o.compareOpen = false; return rf(); }
+  if (a === 'all'){ o.showAll = true; return rf(); }
+  if (a === 'otheroffice') return goTo(hasCounty() ? 'results' : 'typical');
+  if (a === 'openplan'){ o.screen = 'results'; save(); return setTab('road'); }
+}
 /* Open a step, expand its phase, and bring it into view. */
 function goToStep(id){
   S.openTask = id; S.roadFilter = S.done[id] ? 'all' : (S.roadFilter || 'todo');
@@ -4490,6 +4842,7 @@ document.addEventListener('click', async e => {
   if (!t) return;
   if (t.dataset.tab){ hideTerm(); return setTab(t.dataset.tab); }
   if (t.dataset.term != null){ showTerm(t); return; }
+  if (['obdoor','obact','obissue','obtime','obexp','obident','obtype','obready','obcmp','gpick'].some(k => t.dataset[k] !== undefined)) return obClick(t);
   if (t.dataset.tpl) return downloadTpl(t.dataset.tpl, t);
   if (t.dataset.tick){
     const id = t.dataset.tick;
@@ -4508,13 +4861,15 @@ document.addEventListener('click', async e => {
   if (t.dataset.pick){
     Object.assign(S.intake, {office:t.dataset.pick, seatName:t.dataset.seat || '', county:t.dataset.county || S.intake.county, year:t.dataset.year || '', baseVotes:'', isExample:false, picked:true, distType:'', place:t.dataset.place || '', swcd:t.dataset.swcd || '', sid:t.dataset.sid || '', pos:'', tactics:{}, research:{}});
     { const qp = (S.quals || {}).party; if (qp === 'DEM' || qp === 'REP') Object.assign(S.intake, {party:qp, path:'major'}); else if (qp === 'NAV') S.intake.path = 'indep'; else if (qp === 'OTH') S.intake.path = 'minor'; }
-    S.canvass.parties = null; S.canvass.openTurf = ''; S.setupOpen = true; S.openTask = ''; S.collapsed = {}; save(); return setTab('road');
+    S.canvass.parties = null; S.canvass.openTurf = ''; S.setupOpen = true; S.openTask = ''; S.collapsed = {};
+    // Every pick goes through "You're running" first, which then opens the plan.
+    ob().screen = 'commit'; save(); if (S.tab !== 'find') setTab('find'); else renderFind(); renderChip(); window.scrollTo({top:0}); return;
   }
   if (t.dataset.yearPick){ S.findYear = Number(t.dataset.yearPick); save(); renderFind(); return; }
   if (t.dataset.findview){ S.findView = t.dataset.findview; save(); renderFind(); return; }
   if (t.dataset.cand){ const inp = $('#addrIn'); if (inp) inp.value = t.dataset.cand; return runAddr(); }
   if (t.dataset.act === 'findAddr') return runAddr();
-  if (t.dataset.act === 'startOver'){ S.addrEdit = false; Object.assign(S.intake, {zipMode:'', addr:null, addrQ:'', browseCounty:''}); addrMsg = null; save(); renderFind(); renderChip(); return; }
+  if (t.dataset.act === 'startOver'){ S.addrEdit = false; S.ob = {}; Object.assign(S.intake, {zipMode:'', addr:null, addrQ:'', browseCounty:''}); addrMsg = null; save(); renderFind(); renderChip(); return; }
   if (t.dataset.act === 'zipOnly'){ S.intake.addr = null; return zipSearch(S.intake.zip); }
   if (t.dataset.zc){ S.intake.county = t.dataset.zc; save(); renderFind(); renderChip(); return; }
   if (t.dataset.act === 'endBrowse'){ S.intake.browseCounty = ''; save(); renderFind(); $('#addrIn') && $('#addrIn').focus(); return; }
@@ -4604,6 +4959,11 @@ document.addEventListener('click', async e => {
   }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('tr[data-turf]')) e.target.click(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (e.target.id === 'obZip'){ e.preventDefault(); $('.ob-nav .btn.primary')?.click(); }
+  if (e.target.id === 'obZip2'){ e.preventDefault(); $('[data-obact="zipgo"]')?.click(); }
+});
 
 document.addEventListener('change', e => {
   const t = e.target;
@@ -4645,6 +5005,7 @@ document.addEventListener('input', e => {
   }
   if (t.id === 'baseVotes'){ S.intake.baseVotes = t.value; S.intake.isExample = false; save(); const el = $('#sigSum'); if (el) el.textContent = ctx().sigLine; const h = t.parentElement.querySelector('.hint'); if (h){ const c = ctx(); h.textContent = `Required: ${sigText(c.sig, t.value)}. Source: ${c.sig.cite}.`; } }
   if (t.id === 'addrIn'){ S.intake.addrQ = t.value; save(); return; }
+  if (t.id === 'obZip' || t.id === 'obZip2'){ t.value = t.value.replace(/\D/g, '').slice(0, 5); if (t.id === 'obZip'){ const b = $('.ob-nav .btn.primary'); if (b) b.disabled = !/^\d{5}$/.test(t.value); } return; }
   if (t.dataset.rs){
     const r = Object.assign({}, S.intake.research); if (t.value === '') delete r[t.dataset.rs]; else r[t.dataset.rs] = t.value;
     S.intake.research = r; save(); const o = $('#rsWin'); if (o) o.innerHTML = winOut(ctx()); return;
