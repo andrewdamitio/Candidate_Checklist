@@ -4018,13 +4018,15 @@ function groupHtml(g, openId){
 function taskHtml(st, openId){
   if (st.subs) return groupHtml(st, openId);
   const done = !!S.done[st.id], open = S.openTask ? S.openTask === st.id : openId === st.id;
+  if (open){ S.seen = S.seen || {}; S.seen[st.id] = true; }
+  const ask = open && !done && S.tickAsk === st.id ? `<p class="flag amber" role="status"><b>Read this step before you check it off.</b> When you’re done, tap the check again.</p>` : '';
   const state = done ? '' : st.due && daysTo(st.due) < 0 ? 'is-over' : st.due && daysTo(st.due) <= 30 ? 'is-soon' : '';
   return `<li class="task ${done ? 'done' : ''} ${state}" id="task-${st.id}">
     <button class="tick" data-tick="${st.id}" aria-pressed="${done}" aria-label="${done ? 'Mark not done' : 'Mark done'}: ${esc(st.title.replace(/<[^>]+>/g,''))}">${TICK}</button>
     <div class="task-main">
       <button class="task-title" data-open="${st.id}" aria-expanded="${open}">${st.title}<span class="chev" aria-hidden="true"></span></button>
       <div class="task-meta">${reqChip(st)}${dueChip(st)}${!done && EST[st.id] != null ? `<span class="chip est" title="Rough estimate">${estTxt(st.id)}</span>` : ''}${(st.forms||[]).map(f => `<span class="form-chip">${esc(f)}</span>`).join('')}${st.verify ? `<span class="chip verify">Verify</span>` : ''}</div>
-      <div class="task-body" ${open ? '' : 'hidden'}>${open ? stepBody(st) : ''}</div>
+      <div class="task-body" ${open ? '' : 'hidden'}>${open ? ask + stepBody(st) : ''}</div>
     </div>
   </li>`;
 }
@@ -5020,6 +5022,9 @@ document.addEventListener('click', async e => {
   if (t.dataset.tick){
     const id = t.dataset.tick;
     if (S.done[id]){ delete S.done[id]; if (S.auto && S.auto[id] === true) S.auto[id] = 'off:' + S.auto._k; save(); renderRoad(); renderChip(); return; }
+    // A step checked off before it was ever opened opens first, so its details aren’t skipped.
+    if (!(S.seen || {})[id]){ S.tickAsk = id; return goToStep(id); }
+    S.tickAsk = '';
     // Finishing a step opens the next unfinished one, in plan order.
     S.done[id] = true;
     const all = buildPlan(ctx()).flatMap(p => p.steps.flatMap(flatSteps)), i = all.findIndex(x => x.id === id);
