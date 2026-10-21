@@ -717,6 +717,9 @@ const SWCD = JSON.parse(document.getElementById('swcd').textContent);   // ODA S
 const SWCD_BIG = ['005','039','047','051','067'];   // Clackamas, Lane, Marion, Multnomah, Washington: over 250,000 people, so zone seats have no land rule
 const swcdUp = (name, Y) => ((SWCD.d[name] || {}).seats || []).filter(([, exp]) => Y >= exp && (Y - exp) % 4 === 0).map(x => x[0]);
 const cName = f => GEO.counties[f] ? GEO.counties[f].n + ' County' : '';
+/* Counties whose own offices are elected in November by ranked-choice voting, with no May primary.
+   Multnomah: charter Measure 26-232 (2022), first used November 2026 (county candidate guide). */
+const RCV_NOV = ['051'];
 const LOCAL_LIMITS = {'051':'Multnomah County has its own voter-approved contribution limits for county races.'};
 const PORTLAND_NOTE = 'The City of Portland has its own voter-approved contribution limits for city races.';
 
@@ -1094,7 +1097,7 @@ function ctx(){
   const s = S.intake, o = OFF[s.office], kind = kindOf(o, s);
   const path = kind === 'partisan' ? s.path : null;
   const cd = o.id === 'city' ? (CITIES[s.place] || null) : null;
-  const etype = kind === 'swcd' ? 'general' : kind === 'district' ? 'district' : kind === 'city' ? (cd && cd.may ? 'primary' : 'general') : (kind === 'partisan' && path !== 'major') ? 'general' : 'primary';
+  const etype = kind === 'swcd' || (RCV_NOV.includes(s.county) && ['county_comm','county_np'].includes(o.id)) ? 'general' : kind === 'district' ? 'district' : kind === 'city' ? (cd && cd.may ? 'primary' : 'general') : (kind === 'partisan' && path !== 'major') ? 'general' : 'primary';
   const inc = s.incumbent === 'elected' && kind !== 'pcp';
   const list = cycles(etype, inc);
   const cyc = list.find(c => c.year === Number(s.year)) || list[0];
@@ -1238,13 +1241,14 @@ function buildPlan(c){
       {due:c.indepDeadline, cite:'County, City and District Candidate Manual', links:['localManual']}));
   }
   if (kind === 'pcp'){
-    elig.push(jobStep(c));
+    elig.push(jobStep(c), govtStep(c));
     elig.push(step('partyreg', `Be a registered ${MEMBER[s.party]} in your precinct`, `<p>Precinct committeepersons are elected on the party’s primary ballot by voters of the party in that precinct.</p>`));
   }
   if (kind !== 'pcp'){
     const pre = cyc.opens && daysTo(cyc.opens) > 0 ? cyc.opens : null;
     elig.push(step('learn', 'Learn the job before you file', `<p>Watch or attend a few meetings of the ${o.id === 'city' ? 'city council' : o.id === 'school' ? 'school board' : o.id === 'swcd' ? 'conservation district board' : ['state_rep','state_sen'].includes(o.id) ? 'Legislature’s committees' : 'body you’d serve on'}, and read its current budget and a few months of minutes. Introduce yourself to the clerk or staff, and if the incumbent isn’t running, ask them what the job really takes. Voters and reporters will ask what you’d change; this is where your answers come from.</p>`,
       {due:pre, dueLabel:'Before filing opens'}));
+    const gv = govtStep(c); if (gv) elig.push(gv);
     elig.push(raceStep(c), jobStep(c));
     elig.push(step('vet', 'Look up what’s public about you', `<p>Search your own name the way an opponent or reporter would: old social media posts, news stories, court and property records, business filings, and campaign contributions you’ve made (ORESTAR is searchable). Decide now how you’d explain anything that comes up, and make sure your voter registration address is current.</p>`,
       {due:pre, dueLabel:'Before filing opens', links:['orestar','myvote']}));
@@ -1416,7 +1420,8 @@ function buildPlan(c){
   /* 6. Election */
   const e = [];
   let ebody = '<p>Oregon votes by mail.</p>';
-  if (kind === 'nonpartisan') ebody += `<p>Win more than half the votes in May and you’re elected. Otherwise the top two candidates go to the November ballot (${fmt(cyc.general)}).</p>`;
+  if (kind === 'nonpartisan' && c.etype === 'primary') ebody += `<p>Win more than half the votes in May and you’re elected. Otherwise the top two candidates go to the November ballot (${fmt(cyc.general)}).</p>`;
+  if (RCV_NOV.includes(s.county) && ['county_comm','county_np'].includes(o.id)) ebody += `<p>${esc(c.county.n)} County elects this office in November by ranked-choice voting, with no May primary. Voters rank candidates in order; if no one has a majority of first choices, the last-place candidate is eliminated and those ballots count for their next choice, until someone has a majority.</p>`;
   if (kind === 'partisan' && c.path === 'major') ebody += `<p>The top vote-getter wins the ${c.party} nomination and moves to the general election on ${fmt(cyc.general)}.</p>`;
   if (kind !== 'pcp'){
     const ballots = addDays(cyc.election, -20), bLast = addDays(cyc.election, -14);
@@ -1553,7 +1558,7 @@ function regroup(c, P){
     ['Before you decide', take(['reality','household','hours','money','safety','secure'])],
     ['Before you file', [
       ...G('g-qualify', 'Make sure you can run', '<p>Confirm the legal requirements before you spend money or collect signatures.</p>', ['quals','partyreg','navreg','seat']),
-      ...take(['learn','race','vet','scrub','hatch','pubemp'])]],
+      ...take(['learn','govt','race','vet','scrub','hatch','pubemp'])]],
     ['Fundraising and finances', [
       ...G('g-setup', 'Set up the campaign’s money', fed ? '<p>Federal candidates register with the FEC once they cross $5,000 in contributions or spending.</p>' : '<p>Oregon tracks campaign money from the first dollar, including your own. Set up the structure before you raise or spend.</p>', ['fec-5k','fec-f2','fec-f1','fec-bank','fec-or','pcp-money','committee','bank','limits']),
       ...G('g-raise', 'Raise money', '<p>Early money pays for the filing fee, signs, and the first print run, and most of it comes from people who already know you.</p>', ['budget','asks','platform','houseparty']),
@@ -2092,6 +2097,70 @@ function contactsStep(c){
     {links:['lwvLocal','onpaDir'], verify:'Directories change. The League and newspaper lists are from their own sites as of October 2026, and the newspaper list covers association members only.'});
 }
 
+/* ================= How this government works: form of government and election system, for the office picked =================
+   City forms: the Secretary of State and the Legislature's local government guide (most Oregon cities over 2,500 people use
+   council-manager or council-administrator; smaller ones mayor-council). A city is listed as having a city manager only where the
+   city's own website names one (Oct. 20, 2026) or another source confirms it: Beaverton (ICMA, 2020 charter change),
+   Klamath Falls (city site), Hermiston (city site), Eugene (2025 news of its city manager hire), Salem (city's City Manager page),
+   Gresham (2026 city manager hire), Tigard (2026 city manager recruitment), Keizer (Keizertimes, 2026), Lake Oswego (city's City Manager page). */
+const CITY_MANAGER = ['Albany','Ashland','Astoria','Beaverton','Corvallis','Eugene','Gresham','Hermiston','Hillsboro','Keizer','Klamath Falls','Lake Oswego','Lincoln City','McMinnville','Medford','Milton-Freewater','Milwaukie','Molalla','Ontario','Pendleton','Roseburg','Salem','Sherwood','Springfield','Tigard','Troutdale','Tualatin','West Linn','Wilsonville'];
+const CHARTER_COUNTIES = ['Benton','Clatsop','Hood River','Jackson','Josephine','Lane','Multnomah','Umatilla','Washington'];
+const JUDGE_COURTS = {'Gilliam':'juvenile and probate','Sherman':'juvenile and probate','Wheeler':'juvenile and probate','Grant':'probate','Harney':'probate','Malheur':'probate'};
+const FORMS_HTML = `<details class="pl-more"><summary>The four forms of city government, compared</summary><ul>
+  <li><b>Council-manager (or council-administrator):</b> the elected council sets policy and the budget, and hires a professional city manager who runs day-to-day operations and supervises staff. The mayor leads the council but doesn’t run departments. Most Oregon cities over 2,500 people use this form.</li>
+  <li><b>Strong mayor (mayor-council):</b> the voter-elected mayor is the chief executive, runs city departments, and usually hires and fires department heads; the council legislates. Portland has used this form since January 2025.</li>
+  <li><b>Weak mayor (mayor-council):</b> the mayor chairs the council and represents the city but has few powers beyond a council member’s; the council as a whole directs the city, often through a recorder or administrator. Common in small Oregon cities.</li>
+  <li><b>Commission:</b> each elected commissioner personally runs a set of departments, so commissioners are both legislators and administrators. Portland was the last large U.S. city to use it, until 2024; it’s now rare.</li></ul>
+  <p><b>How to tell which yours is:</b> read the city charter (on the city’s website) for the words “city manager” or “city administrator,” and for what the mayor can appoint, veto, or direct. Or ask the city recorder who supervises department heads.</p></details>`;
+function govtStep(c){
+  const o = c.o, s = c.s, k = c.county, cn = k ? k.n : '';
+  let lead = '', more = '';
+  if (o.id === 'city'){
+    const cd = c.city, nm = cd ? cd.name : (c.cityName || 'your city'), pop = GEO.pop.place[s.place];
+    const mgr = cd && CITY_MANAGER.includes(cd.name), pdx = cd && cd.name === 'Portland';
+    const mayorRace = /^Mayor/.test(s.seatName || '');
+    lead = pdx ? `<p><b>Portland has had a strong-mayor government</b> since January 2025: the elected mayor runs the city with a city administrator, and a 12-member council, three from each of four districts, sets policy and the budget. ${mayorRace ? 'As mayor, you’d be the city’s chief executive.' : 'As a councilor, you’d legislate and oversee, not run bureaus.'}</p>`
+      : mgr ? `<p><b>${esc(nm)} has a hired city manager</b> who runs day-to-day operations and supervises staff; the council${cd.mayorElected ? ' and mayor' : ''} set policy, adopt the budget, and hire and evaluate the manager. That’s the council-manager form, the most common in Oregon. ${mayorRace ? 'As mayor, you’d lead the council and speak for the city, but you wouldn’t run departments.' : 'As a councilor, you’d direct the city through council votes, not by giving instructions to staff.'}</p>`
+      : `<p><b>We haven’t confirmed how ${esc(nm)} is run.</b> ${pop ? `With about ${n0(pop)} residents, ` : ''}${pop && pop < 2500 ? 'it’s the size of city that often uses a mayor-council form, where the council directs the city, sometimes with a part-time administrator or recorder.' : 'most Oregon cities its size hire a city manager or administrator to run daily operations while the council sets policy.'} Check the charter or ask the city recorder (see the comparison below).</p>`;
+    const mayorTxt = cd ? (cd.mayorElected ? `<li><b>The mayor:</b> ${esc(cd.mayor)}.</li>` : `<li><b>The mayor:</b> ${esc(cd.mayor)}. When the council picks the mayor from its members, the role is mostly presiding over meetings.</li>`) : '';
+    const rcv = pdx ? '<li><b>Ranked-choice voting:</b> Portland elects its mayor, auditor, and council by ranked-choice ballots in November. Council races are multi-winner: the three candidates who reach the threshold in a district win.</li>'
+      : cd && cd.name === 'Corvallis' ? '<li><b>Ranked-choice voting:</b> Corvallis has used it for city races with three or more candidates since 2022. Voters rank candidates; if no one has a majority, the last-place candidate is dropped and those ballots move to their next choice.</li>' : '';
+    const seatsTxt = cd ? `<li><b>Seats:</b> ${esc(cd.seats)}.${cd.wards ? ' Some charters let every city voter elect each ward’s councilor, and others let only that ward vote, so check which yours does: it decides who you need to reach.' : ' Citywide seats mean you campaign to every voter in the city.'}</li>` : '';
+    more = `<p><b>How ${esc(nm)} elects its council and mayor:</b></p><ul>${seatsTxt}${mayorTxt}${cd ? `<li><b>When:</b> ${esc(cd.election)}.</li>` : ''}${rcv}</ul>${FORMS_HTML}`;
+  } else if (['county_comm','county_judge','county_np','da'].includes(o.id)){
+    const g = k ? k.gov : null, comm = g ? g.comm.filter(x => x.t === 'Commissioner').length : 0, charter = CHARTER_COUNTIES.includes(cn), court = g && g.court;
+    lead = court ? `<p><b>${esc(cn)} County is governed by a county court:</b> a county judge and ${comm || 'two'} commissioners, elected countywide, act as the board that sets policy and the budget. ${JUDGE_COURTS[cn] ? `Here the county judge also hears ${JUDGE_COURTS[cn]} cases.` : 'Here the judge’s role is administrative, not judicial.'}</p>`
+      : `<p><b>${esc(cn || 'Your')} County is run by a ${comm ? comm + '-member ' : ''}board of commissioners</b> that sets policy, adopts the budget, and oversees departments, often through a hired county administrator.${charter ? ` It’s one of nine Oregon counties with a home-rule charter, which can change the number of commissioners, which offices are elected, and how they’re elected; read the charter before you file.` : ' It operates under state law rather than its own charter.'}</p>`;
+    const rcv = RCV_NOV.includes(s.county) ? `<li><b>Ranked-choice voting:</b> since November 2026, ${esc(cn)} County elects its commission, sheriff, and auditor in November by ranked-choice ballots, with no May primary. Commissioners run by district, and the chair countywide.</li>`
+      : cn === 'Benton' ? '<li><b>Ranked-choice voting:</b> Benton County voters adopted it for county races in 2016, and it was first used in 2020.</li>' : '';
+    const part = o.id === 'county_comm' && g ? (g.cp === 'p' ? '<li><b>Partisan:</b> commission races here are partisan, so Democrats and Republicans choose nominees in May and the final contest is in November.</li>' : g.cp === 'np' && !RCV_NOV.includes(s.county) ? '<li><b>Nonpartisan:</b> commission races are decided in May if a candidate wins a majority; otherwise the top two go to November.</li>' : '') : '';
+    more = `<p><b>What the office does:</b> ${o.id === 'county_comm' ? 'commissioners are the county’s legislature and its executive board together: they pass ordinances, adopt the budget, set land-use policy, and oversee public health, roads, and other services.' : o.id === 'county_judge' ? 'the county judge chairs the county court and acts as its presiding officer, much like a commission chair.' : o.id === 'da' ? 'the district attorney is a state office elected by county: the DA prosecutes crimes in the county and supervises deputy DAs, and the county funds much of the office.' : `the ${esc((c.role || 'county officer').toLowerCase())} runs a department independently of the commission, but the commission sets its budget.`}</p><ul>${part}${rcv}<li><b>Seats:</b> ${comm ? `${comm} commissioner${comm === 1 ? '' : 's'}` : 'commissioners'}${court ? ' plus the county judge' : ''}, usually four-year terms. Most Oregon counties elect commissioners countywide by numbered position; some charter counties elect them by district.</li></ul>`;
+  } else if (['school','special','swcd'].includes(o.id)){
+    const b = c.board;
+    lead = o.id === 'school' ? `<p><b>A school board governs; the superintendent manages.</b> The board sets policy, adopts the budget, approves labor contracts, and hires and evaluates the superintendent, who runs the schools day to day. Individual board members have no authority on their own; only the board acting together does.</p>`
+      : o.id === 'swcd' ? `<p><b>A soil and water conservation district board</b> of unpaid directors sets priorities for conservation programs and grants, and usually hires a district manager. The Oregon Department of Agriculture oversees the districts.</p>`
+      : `<p><b>A special district board</b> sets policy, rates or tax levies within its legal limits, and the budget, and hires a manager or chief (a fire chief, for example) to run operations. Only the board acting together has authority.</p>`;
+    more = `<ul>${b ? `<li><b>How seats are elected here:</b> ${esc(b.how)}</li>` : `<li><b>Seats:</b> ${o.id === 'swcd' ? 'zone positions (you must live in the zone) and at-large positions.' : 'numbered positions, sometimes tied to zones you must live in while the whole district votes. Your county’s election notice lists them.'}</li>`}
+      <li><b>When and how it’s decided:</b> ${o.id === 'swcd' ? 'at the November general election in even years.' : 'at the May district election in odd years. Whoever gets the most votes wins; there’s no runoff.'}</li>
+      ${o.id !== 'swcd' ? '<li><b>The budget committee:</b> under Oregon’s local budget law, the board and an equal number of appointed residents review the budget each spring before the board adopts it. Watching those meetings is the fastest way to learn the district.</li>' : ''}</ul>`;
+  } else if (o.leg){
+    lead = `<p><b>Oregon’s Legislature is a citizen legislature</b> of 30 senators (four-year terms) and 60 representatives (two-year terms), each from a single-member district. It meets for up to 160 days in odd-numbered years and up to 35 days in even-numbered years, and most work happens in committees and party caucuses.</p>`;
+    more = `<ul><li><b>Quorum and supermajorities:</b> two-thirds of each chamber must be present to do business, and tax increases need a three-fifths vote.</li><li><b>Attendance rule:</b> since Measure 113 (2022), a legislator with 10 or more unexcused absences from floor sessions can’t run for the next term.</li><li><b>Elections:</b> partisan. Democrats and Republicans choose nominees in closed May primaries; the November general decides the seat by plurality.</li></ul>`;
+  } else if (o.statewide && o.id !== 'us_sen'){
+    lead = `<p><b>Oregon elects five statewide executives</b> separately: governor, secretary of state, treasurer, attorney general, and labor commissioner. There’s no lieutenant governor; the secretary of state is first in line to succeed the governor.</p>`;
+    more = `<ul><li><b>Term limits:</b> the governor, secretary of state, and treasurer can serve no more than eight years in any twelve.</li><li><b>Elections:</b> ${o.id === 'boli' ? 'the labor commissioner is nonpartisan: a majority in May wins outright, otherwise the top two go to November.' : 'partisan, with closed May primaries for Democrats and Republicans and a November general decided by plurality.'}</li></ul>`;
+  } else if (o.level === 'federal'){
+    lead = o.id === 'us_sen' ? `<p><b>Oregon’s two U.S. senators</b> serve staggered six-year terms, so one seat is on the ballot in most even-numbered years.</p>` : `<p><b>Oregon has six U.S. House districts.</b> Representatives serve two-year terms and must live in Oregon, though not necessarily in the district.</p>`;
+    more = `<ul><li><b>Elections:</b> partisan. Democrats and Republicans choose nominees in closed May primaries, and the November general is decided by plurality. Federal campaign money is regulated by the FEC, not Oregon.</li></ul>`;
+  } else if (o.id === 'pcp'){
+    lead = `<p><b>Precinct committeepersons make up the county party.</b> PCPs from each party form its county central committee, which elects party officers, fills some vacancies, and sends delegates to the state party.</p>`;
+    more = `<ul><li><b>Elections:</b> on the party’s May primary ballot in even years. Many precinct seats have no candidate, so a handful of write-in votes can win one.</li></ul>`;
+  }
+  if (!lead) return null;
+  return step('govt', 'Learn how this government is organized and elected', `${lead}${more}<p class="note">More on the forms of government and election systems in the Learn tab. <button class="linkbtn" data-tab="learn">Open Learn</button></p>`,
+    {due: c.cyc.opens && daysTo(c.cyc.opens) > 0 ? c.cyc.opens : null, dueLabel:'Before filing opens', links: o.id === 'city' ? ['localManual'] : ['blueBook'], verify: o.id === 'city' && !(c.city && (CITY_MANAGER.includes(c.city.name) || c.city.name === 'Portland')) ? 'We haven’t confirmed this city’s form of government. The city charter decides it.' : null});
+}
+
 /* ================= Legal checks: your job, ethics in office, and what to do if something goes wrong ================= */
 function jobStep(c){
   const partisan = c.kind === 'partisan', pcp = c.kind === 'pcp';
@@ -2149,7 +2218,7 @@ function mediaStep(c){
 }
 
 /* Rough hours each step takes, for the weekly view. Ongoing work (doors, call time) is marked. Estimates, not measurements. */
-const EST = {reality:.5, household:1, hours:.5, money:1, safety:1, secure:1, quals:.5, partyreg:.25, navreg:.25, seat:.5, learn:10, race:1.5, vet:3, scrub:2, pubemp:.25, hatch:.5,
+const EST = {reality:.5, household:1, hours:.5, money:1, safety:1, secure:1, quals:.5, partyreg:.25, navreg:.25, seat:.5, learn:10, govt:1, race:1.5, vet:3, scrub:2, pubemp:.25, hatch:.5,
   committee:1, bank:1.5, limits:.5, platform:1, report:1, budget:2, asks:6, houseparty:4, file:1.5, packet:1, prospective:1, nominate:2, sigs:20, early:.5, sei:1, sel180:.25, pamphlet:3,
   mix:.5, team:2, staff:1, recruit:4, volunteers:2, message:3, photos:3, press:2, forums:6, endorse:4, contacts:2, oppo:4, attacks:1, media:1, web:6, digital:3, disclaim:.5, lit:4, signs:4,
   mail:4, radio:3, tv:6, votegoal:2, list:1, load:1, doors:30, coord:2, phones:6, gotv:10, eday:2, count:1, rules:.5, ifwin:2, ethics:1, after:3};
@@ -2742,7 +2811,7 @@ function findEntries(src, f, exact){
   src.hd.filter(x => x[0]).forEach(x => E.push({lvl:L, title:`State House District ${x[0]}`, office:'state_rep', seat:`House District ${x[0]}`, pop:P.hd[x[0]], when:2028, share:sh(x[1]), badges:['two']}));
   const comm = g.comm.filter(x => x.t === 'Commissioner'), judge = g.comm.find(x => x.t === 'County Judge');
   const ups = comm.map(x => x.up).filter(Boolean).sort(); const first = ups[0];
-  E.push({lvl:C, title:`${k.n} County ${g.court ? 'Court Commissioner' : 'Commissioner'}`, office:'county_comm', seat:`${k.n} County ${g.court ? 'Court' : 'Commission'}`, pop:k.pop, when: g.cp === 'p' ? (first || 2028) : 'may', year:first, up:first,
+  E.push({lvl:C, title:`${k.n} County ${g.court ? 'Court Commissioner' : 'Commissioner'}`, office:'county_comm', seat:`${k.n} County ${g.court ? 'Court' : 'Commission'}`, pop:k.pop, when: g.cp === 'p' || RCV_NOV.includes(f) ? (first || 2028) : 'may', year:first, up:first,
     badges: g.cp === 'p' ? ['two'] : g.cp === 'np' ? ['np'] : ['ask'], seatUps: comm.map(x => x.up), seatN: comm.length, note: ''});
   if (judge) E.push({lvl:C, title:`${k.n} County Judge`, office:'county_judge', seat:`${k.n} County Judge`, pop:k.pop, when:'may', year:judge.up, up:judge.up, est:judge.est, badges:['np'], note:'Chairs the county court'});
   const seen = new Set();
@@ -2750,7 +2819,7 @@ function findEntries(src, f, exact){
     if (x.t === 'Justice of the Peace' || seen.has(x.t + x.up)) return; seen.add(x.t + x.up);
     const office = x.t === 'District Attorney' ? 'da' : 'county_np';
     const cred = x.t === 'District Attorney' || ROLE_QUALS[x.t];
-    E.push({lvl:C, title:`${k.n} County ${x.t}`, office, seat:`${k.n} County ${x.t}`, pop:k.pop, when:'may', year:x.up, up:x.up, est:x.est, badges: cred ? ['np','cred'] : ['np'],
+    E.push({lvl:C, title:`${k.n} County ${x.t}`, office, seat:`${k.n} County ${x.t}`, pop:k.pop, when: office === 'county_np' && RCV_NOV.includes(f) ? (x.up || 2028) : 'may', year:x.up, up:x.up, est:x.est, badges: cred ? ['np','cred'] : ['np'],
       note: x.note === 'interim' ? 'Held by an interim appointee; ask the clerk when it’s next up' : x.note === 'vacant' ? 'Listed as vacant; ask the clerk when it’s next up' : x.t === 'District Attorney' ? 'Oregon State Bar members' : '', unknownUp: !x.up});
   });
   src.t.filter(x => x[0]).forEach(x => { const nm = GEO.cities[x[0]] || x[0], cd = CITIES[x[0]];
@@ -3271,6 +3340,7 @@ const DO = {
   votegoal:['Look up past turnout for this race','Set your win number','Decide who you’ll persuade and who you’ll turn out','Do the contact math'],
   load:['Load the list in the Voters tab','Cut turf'],
   doors:['Pick a walk app or print lists from the Voters tab','Set a weekly door goal','Knock in pairs','Log every conversation'],
+  govt:['Find out who runs day-to-day operations','Learn how your seat is elected','Read the charter or law section on your office'],
   hatch:['Check whether your job is federal or federally funded','Read your employer’s policy on political activity','Ask the Office of Special Counsel if you’re unsure'],
   contacts:['Download the contact list template','Add your county party, League, and local papers','Add groups you belong to and who can introduce you'],
   oppo:['Pull opponents’ finance reports','Read their record and past statements','Keep a source for every fact'],
@@ -3757,6 +3827,13 @@ const GLOSSARY = [
   ['Electioneering limit', 'Campaigning isn’t allowed within 100 feet of the entrance to a county elections office while ballots are out.', []],
   ['FEC', 'The Federal Election Commission, which regulates money in races for U.S. Senate, U.S. House, and president. Oregon rules and ORESTAR don’t apply to those races.', ['fec']],
   ['Filing officer', 'The office you file with to get on the ballot: the Secretary of State for state and federal offices, the county elections office for county and district offices, the city elections officer for city offices, and the Department of Agriculture for soil and water conservation districts.', ['filing officer']],
+  ['Council-manager government', 'A form of city government where the elected council sets policy and hires a professional city manager to run daily operations. The most common form in Oregon cities over 2,500 people.', ['council-manager','city manager']],
+  ['Strong mayor and weak mayor', 'In a strong-mayor city, the elected mayor is the chief executive who runs departments. In a weak-mayor city, the mayor mostly presides over the council and has few powers beyond a council member’s.', ['strong mayor','strong-mayor','weak mayor','weak-mayor']],
+  ['Commission government', 'A form of city government where each elected commissioner personally runs a group of departments. Portland used it until 2024; it’s now rare.', ['commission form']],
+  ['County court', 'In some rural Oregon counties, the governing board: a county judge and two commissioners. Only six county judges still hear any court cases.', ['county court']],
+  ['Home-rule charter', 'A county’s or city’s own constitution, adopted by its voters, that sets how its government is organized. Every Oregon city has one; nine counties do.', ['home-rule charter','charter']],
+  ['Ranked-choice voting', 'Voters rank candidates in order. If no one has a majority of first choices, the last-place candidate is eliminated and those ballots count for their next choice, until someone wins.', ['ranked-choice','ranked choice']],
+  ['Ward', 'A part of a city that elects its own councilor. You must live in the ward to run for its seat.', ['ward']],
   ['Conflict of interest', 'When a decision you’d make in office could affect your own finances, a relative’s, or a business you’re connected to. Oregon officials have to announce conflicts publicly, and sit out decisions where the effect is certain.', ['conflict of interest','conflicts of interest']],
   ['Gift limit', 'Oregon public officials and candidates, and their relatives and households, can’t accept more than $50 a year in gifts from a source with an interest in their decisions.', ['gift limit']],
   ['Hatch Act', 'A federal law limiting political activity by federal employees, and by state and local employees whose jobs are tied to federally funded programs. It can bar them from running in partisan elections.', ['hatch act']],
@@ -3795,6 +3872,13 @@ const PRIMER = [
   ['Everyone votes by mail', `<p>Every registered voter gets a ballot in the mail. Counties mail them about 14 to 20 days before Election Day, and voters return them by mail or at an official drop box. A mailed ballot counts if it’s postmarked by Election Day and arrives within 7 days, so close races can take a week or more to settle.</p><p><b>What it means for you:</b> the election is a two- to three-week window, not one day. Your doors, mail, and ads need to reach voters <i>before</i> ballots arrive.</p>`],
   ['The election calendar', `<p><b>May primary</b> (third Tuesday in May, even years): parties pick nominees for partisan offices, and nonpartisan offices like county, judicial, and some city seats are decided.</p><p><b>November general</b> (even years): the final election for partisan offices, nonpartisan runoffs, many city offices, and soil and water conservation districts.</p><p><b>May district election</b> (odd years): school boards and most special districts, such as fire, water, and parks.</p><p>Filing deadlines come months before each election. Your plan shows the exact dates for your race.</p>`],
   ['Partisan and nonpartisan races', `<p><b>Partisan offices</b> (U.S. Senate and House, governor, secretary of state, treasurer, attorney general, the Legislature, and county commissioner in some counties) show party labels. Democrats and Republicans choose nominees in a <b>closed primary</b>: only voters registered with that party can vote in it. Minor parties nominate by their own rules, and independents qualify by petition or an assembly of electors.</p><p><b>Nonpartisan offices</b> (labor commissioner, judges, district attorneys, most county offices, city offices, and school and special district boards) have no party labels. In a May primary, a candidate who wins a majority is elected; otherwise the top two go to November. Cities set their own rules by charter, and many elect in November only. District board races are usually decided by whoever gets the most votes.</p><p>Many Oregon voters are nonaffiliated, because automatic registration at the DMV adds people without a party. They can’t vote in the Democratic or Republican primaries but can vote in every nonpartisan race.</p>`],
+  ['How local governments are organized', `<p><b>Cities</b> choose their own form of government in their charters. Most Oregon cities over 2,500 people use <b>council-manager</b> (or council-administrator): the council sets policy and hires a professional manager who runs operations. Many smaller cities use <b>mayor-council</b>, where the council directs the city itself; a <b>strong mayor</b> is the chief executive who runs departments (Portland, since 2025), while a <b>weak mayor</b> mainly presides over the council. In the <b>commission</b> form, each commissioner runs departments personally; Portland used it until 2024, and it’s now rare.</p>
+    <p><b>Counties</b> are run by a board of three or five commissioners, or in some rural counties by a <b>county court</b>: a county judge and two commissioners. Only six county judges (Gilliam, Grant, Harney, Malheur, Sherman, and Wheeler) still hear any court cases. Nine counties (Benton, Clatsop, Hood River, Jackson, Josephine, Lane, Multnomah, Umatilla, and Washington) have <b>home-rule charters</b> that set their own structure, such as which offices are elected.</p>
+    <p><b>School and special districts</b> are governed by elected boards that set policy and the budget and hire a superintendent, manager, or chief to run operations.</p>`],
+  ['Election systems you’ll see', `<ul><li><b>Plurality:</b> whoever gets the most votes wins, even without a majority. Used for school and special district boards and for November general elections.</li>
+    <li><b>Majority with a runoff:</b> nonpartisan county, judicial, and many city races in May. A majority wins outright; otherwise the top two face off in November.</li>
+    <li><b>Ranked-choice voting:</b> voters rank candidates; if no one has a majority, the last-place candidate is eliminated and those ballots count for their next choice, repeating until someone wins. Used by Benton County (since 2020), Corvallis (since 2022), Portland (since 2024, including multi-winner council districts), and Multnomah County (since 2026). Oregon voters rejected using it statewide in 2024 (Measure 117).</li>
+    <li><b>At-large, ward, and numbered positions:</b> at-large seats are elected by the whole city or district. Ward or district seats require you to live in one area, and depending on the charter, either that area or the whole city votes. With numbered positions, you file for one position and run only against others who filed for it.</li></ul>`],
   ['Who runs what', `<p><b>The Secretary of State’s Elections Division</b> takes filings for federal, statewide, and legislative offices, district attorneys, and judges; runs ORESTAR; and publishes the state voters’ pamphlet.</p><p><b>Your county elections office</b> takes filings for county and district offices, mails and counts every ballot, sells voter lists, and publishes local voters’ pamphlets.</p><p><b>Your city recorder or elections officer</b> takes filings for city offices under the city charter. <b>The Oregon Department of Agriculture</b> handles soil and water conservation district filings. <b>The FEC</b> regulates money in federal races.</p>`],
   ['Getting on the ballot', `<p>You file a declaration of candidacy with your filing officer during the filing window, and either pay a fee or turn in voter signatures. Fees depend on the office, from nothing for some local seats to $150 for U.S. Senate, and cities set their own. If you qualify by signatures, you usually file a prospective petition first and get it approved before collecting. You can withdraw by a set deadline if you change your mind.</p><p>Your plan lists the form, fee, signature count, and deadline for your race.</p>`],
   ['Campaign money', `<p>Oregon tracks campaign money from the first dollar, including your own. If you’ll raise or spend more than $1,500 in a year, or want someone else to be treasurer, you form a committee in ORESTAR and open a separate bank account. Every contribution and expense is reported there, and anyone can look it up. Starting January 1, 2027, Oregon has contribution limits for the first time.</p><p>Federal candidates register with the FEC once they raise or spend more than $5,000 and follow federal rules instead.</p>`],
