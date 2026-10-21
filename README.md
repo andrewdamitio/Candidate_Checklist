@@ -2,7 +2,9 @@
 
 A free planning guide for people thinking about running for office in Oregon. Enter an address to see every office on your ballot, from precinct committeeperson to U.S. Senate. Pick one and get a dated, step-by-step plan covering eligibility, filing, campaign finance, the voters' pamphlet, campaigning, door knocking, and Election Day. The plan suggests a campaign mix for the office (door knocking, mail, radio, TV, party coordination, and more), and the candidate can add or drop any of it. For federal, statewide, and legislative seats it shows past results and a starting win number.
 
-The **Learn** tab explains how Oregon elections work, defines the terms used in the plan (underlined terms in the plan link to these definitions), and offers fill-in templates filled with the candidate's race: a budget, a fundraising call sheet, contribution cards, volunteer sign-up sheets, a press release, a door script, and more.
+The **Learn** tab explains how Oregon elections work, defines the terms used in the plan (underlined terms in the plan link to these definitions), and offers fill-in templates filled with the candidate's race: a budget, a fundraising call sheet, contribution cards, volunteer sign-up sheets, a press release, a door script, a county contact list, and more, with Spanish versions of the pieces voters see.
+
+The plan also covers legal checks first-time candidates miss (the federal Hatch Act, employer rules, ethics rules for new officials, complaints, recounts, and write-ins), researching opponents, answering attacks, and working with reporters. Each step shows a rough time estimate. A campaign team can share progress by saving a backup file and merging a teammate's file on the Sources tab.
 
 It's a single web page with no server, accounts, or tracking. Everything a person enters (address, answers, checklist progress, voter files) stays in their own browser.
 
@@ -35,6 +37,8 @@ The **Sources** tab in the app lists every source. In short:
 - **Filing rules, fees, deadlines, and forms:** Oregon Secretary of State candidate manuals, ORS chapters 249, 254, 255, and 260, and city charters and candidate packets for 67 cities.
 - **Campaign finance:** the Secretary of State's Campaign Finance Manual (rev. 01/2025) and the 2026 contribution-limit legislation page.
 - **Voters' pamphlet:** the State Voters' Pamphlet Manual (rev. 08/2026) and the joint county pamphlet rules.
+- **Contact lists:** League of Women Voters of Oregon local Leagues and the Oregon Newspaper Publishers Association member directory.
+- **Federal and ethics rules:** the U.S. Office of Special Counsel's Hatch Act guidance, ORS chapters 244 (government ethics), 254 and 258 (write-ins and recounts), and 165.540 (recording conversations).
 - **Past results:** OpenElections' Oregon files for the November 2022 and 2024 general elections and the May 2026 primary.
 - **Districts and addresses:** 2024 Census TIGER/Line address ranges, ODOT city limits (processed September 2026), and the Oregon Blue Book for county offices.
 - **School boards and conservation districts:** county election notices and the Oregon Department of Agriculture SWCD directory.
