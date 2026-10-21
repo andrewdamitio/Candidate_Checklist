@@ -538,8 +538,6 @@ table.res tr.res-top td:first-child{font-weight:700}
 .rs-grid .wide{grid-column:1/-1}
 .rs-out{background:var(--fir-soft);border-radius:var(--r);padding:10px 12px;margin:8px 0}
 /* Templates: download buttons inside steps and on the Learn tab. */
-.tpl-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}
-.tpl-row .lab{margin:0 4px 0 0}
 .tpl-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:8px}
 .tpl-card{border:1px solid var(--rule);border-radius:var(--r);padding:12px;background:var(--surface);display:grid;gap:6px;align-content:start}
 .tpl-card h3{font-size:15px;margin:0}
@@ -627,9 +625,20 @@ span.flow-b{cursor:default;opacity:.7}
 .todo label{display:flex;gap:9px;align-items:flex-start;cursor:pointer;font-size:14.5px}
 .todo input{width:18px;height:18px;margin-top:2px;accent-color:var(--fir);flex:none}
 .todo input:checked + span{color:var(--muted);text-decoration:line-through}
-.todo-acts{display:flex;flex-wrap:wrap;gap:6px;margin:3px 0 0 27px}
-.todo-act{appearance:none;font:500 12.5px var(--body);color:var(--fir);background:var(--fir-soft);border:0;border-radius:4px;padding:3px 8px;cursor:pointer;text-decoration:none;line-height:1.4}
-.todo-act:hover{text-decoration:underline}
+/* Resource links (templates, websites, plan steps): icon, type label, name, and what clicking does. */
+.res-list{display:grid;gap:6px;max-width:560px}
+.todo-res{margin:6px 0 2px 27px}
+.res-block{margin:12px 0}
+.res-h{font:600 11.5px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 6px}
+.res-link{appearance:none;display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:7px 11px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;text-decoration:none;cursor:pointer;transition:border-color .12s,background .12s}
+.res-link:hover{border-color:var(--fir);background:var(--paper)}
+.res-link:hover .res-t{color:var(--fir)}
+.res-ic{width:18px;height:18px;flex:none;fill:none;stroke:var(--fir);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.res-txt{display:flex;flex-direction:column;min-width:0;flex:1;gap:1px}
+.res-k{font:600 10px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.res-t{font-size:13.5px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.res-m{flex:none;font:500 11.5px var(--mono);color:var(--muted);white-space:nowrap}
+@media (max-width:480px){.res-m{display:none}.todo-res{margin-left:0}}
 .todo-how{margin:4px 0 2px 27px;font-size:13.5px;line-height:1.5}
 .todo-how summary{cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:600;list-style-position:inside}
 .todo-how[open] summary{margin-bottom:4px}
@@ -2162,15 +2171,34 @@ const TPL_USE = {
   'volsignup-es':'Imprímala para cada evento. Esa misma noche, copie cada nombre a la lista de voluntarios y envíe un mensaje con un primer turno específico.',
   'contrib-es':'Imprima cuatro por página en cartulina. Pida a una persona bilingüe que revise el texto legal antes de imprimir, y escriba el nombre del comité exactamente como está registrado.',
 };
+/* Resource links: one consistent row for every template, outside website, plan step, or tab the plan points to.
+   Icon by type, a small type label, the resource name, and what clicking does. */
+const RES_IC = {
+  tpl:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+  url:'<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v6H4V6h6"/>',
+  step:'<path d="M5 12h13M13 6l6 6-6 6"/>',
+  tab:'<path d="M4 5h16v14H4zM4 9h16"/>',
+};
+const resIcon = k => `<svg class="res-ic" viewBox="0 0 24 24" aria-hidden="true">${RES_IC[k]}</svg>`;
+const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
+function resLink(kind, label, title, meta, attrs){
+  const inner = `${resIcon(kind)}<span class="res-txt"><span class="res-k">${label}</span><span class="res-t">${title}</span></span><span class="res-m">${meta}</span>`;
+  return kind === 'url' ? `<a class="res-link" ${attrs} target="_blank" rel="noopener">${inner}</a>` : `<button type="button" class="res-link" ${attrs}>${inner}</button>`;
+}
+const tplRes = T => resLink('tpl', /-es$/.test(T.id) ? 'Template · En español' : 'Template', esc(T.title), /csv/.test(T.fmt) ? 'Spreadsheet · CSV' : 'Printable page', `data-tpl="${T.id}"`);
+const urlRes = (href, title, label) => resLink('url', label || 'Website', esc(title), esc(hostOf(href)), `href="${esc(href)}"`);
 function tplButtons(stepId){
   const T = TEMPLATES.filter(x => x.steps.includes(stepId));
-  return T.length ? `<div class="tpl-row"><span class="lab">${T.length > 1 ? 'Templates' : 'Template'}</span>${T.map(x => `<button class="btn small quiet" data-tpl="${x.id}">${esc(x.title)}</button>`).join('')}</div>` : '';
+  return T.length ? `<div class="res-block"><p class="res-h">${T.length > 1 ? 'Templates for this step' : 'Template for this step'}</p><div class="res-list">${T.map(tplRes).join('')}</div></div>` : '';
 }
 async function downloadTpl(id, btn){
   const T = TEMPLATES.find(x => x.id === id); if (!T) return;
   const csv = /csv/.test(T.fmt), name = `ballot-path-${id}.${csv ? 'csv' : 'html'}`;
   const r = await offerFile(name, T.build(), csv ? 'text/csv' : 'text/html');
-  if (btn){ const old = btn.textContent; btn.textContent = r === 'saved' ? 'Saved' : r === 'declined' ? old : 'Couldn’t save'; setTimeout(() => { btn.textContent = old; }, 2200); }
+  if (!btn) return;
+  const tgt = btn.querySelector('.res-m') || btn, old = tgt.textContent;
+  tgt.textContent = r === 'saved' ? 'Downloaded' : r === 'declined' ? old : 'Couldn’t save';
+  setTimeout(() => { tgt.textContent = old; }, 2200);
 }
 
 /* ================= Who to call in your county =================
@@ -3666,15 +3694,15 @@ function todoActs(id, i){
   const a = (DO_ACT[id] || {})[i]; if (!a) return '';
   const hasStep = sid => !PLAN_IDS || PLAN_IDS.has(sid);
   const one = x => {
-    if (x.tpl){ const T = TEMPLATES.find(t => t.id === x.tpl); return T ? `<button class="todo-act" data-tpl="${T.id}">Template: ${esc(T.title)}</button>` : ''; }
-    if (x.link && LINKS[x.link]) return `<a class="todo-act" href="${esc(LINKS[x.link][1])}" target="_blank" rel="noopener">${esc(LINKS[x.link][0])} ↗</a>`;
-    if (x.url) return `<a class="todo-act" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.label)} ↗</a>`;
-    if (x.step) return hasStep(x.step) ? `<button class="todo-act" data-scrollto="${x.step}">Step: ${esc(x.label)}</button>` : '';
-    if (x.tab) return `<button class="todo-act" data-tab="${x.tab}">${esc(x.label)}</button>`;
+    if (x.tpl){ const T = TEMPLATES.find(t => t.id === x.tpl); return T ? tplRes(T) : ''; }
+    if (x.link && LINKS[x.link]) return urlRes(LINKS[x.link][1], LINKS[x.link][0], 'Official source');
+    if (x.url) return urlRes(x.url, x.label, 'Website');
+    if (x.step) return hasStep(x.step) ? resLink('step', 'Plan step', esc(x.label), 'Go to step', `data-scrollto="${x.step}"`) : '';
+    if (x.tab) return resLink('tab', 'In this app', esc(x.label), 'Open', `data-tab="${x.tab}"`);
     return '';
   };
   const html = [].concat(a).map(one).join('');
-  return html ? `<div class="todo-acts">${html}</div>` : '';
+  return html ? `<div class="res-list todo-res">${html}</div>` : '';
 }
 function stepBody(st){
   const a = anatomy(st);
@@ -4191,7 +4219,7 @@ function renderLearn(){
       <p class="note">Underlined terms in your plan link here. Tap one to see its definition.</p></section>`;
 }
 /* Underline the first use of each glossary term in open plan steps; tapping shows the definition. */
-const GL_SKIP = 'a, button, h1, h2, h3, h4, label, select, textarea, input, .tip-cite, .cite, .gl, summary, .tpl-row, .tac';
+const GL_SKIP = 'a, button, h1, h2, h3, h4, label, select, textarea, input, .tip-cite, .cite, .gl, summary, .res-block, .res-list, .tac';
 function glossify(root){
   root.querySelectorAll('.task-body:not([hidden])').forEach(body => {
     if (body.dataset.gl) return; body.dataset.gl = '1';
