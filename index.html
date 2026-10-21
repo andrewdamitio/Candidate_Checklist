@@ -640,6 +640,11 @@ span.flow-b{cursor:default;opacity:.7}
 .res-d{font-size:13px;color:var(--muted);line-height:1.4;margin-top:2px}
 .res-m{flex:none;font:500 11.5px var(--mono);color:var(--muted);white-space:nowrap}
 @media (max-width:480px){.res-m{display:none}.todo-res{margin-left:0}}
+button.brand{appearance:none;background:none;border:0;padding:0;margin:0;color:inherit;cursor:pointer;text-align:left}
+button.brand:hover .mark{filter:brightness(1.12)}
+.ob-resume{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--gold);border-radius:var(--r2);padding:14px 18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.ob-resume .note{margin-top:2px;max-width:60ch}
+.ob-resume-acts{display:flex;flex-wrap:wrap;gap:8px}
 /* Onboarding: three doors, interview, readiness, office cards, compare, and the "You're running" screen. */
 .ob-doors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
 @media (max-width:820px){.ob-doors{grid-template-columns:minmax(0,1fr)}}
@@ -839,7 +844,7 @@ a{color:var(--link)}
 <body>
 <header class="bar">
   <div class="wrap">
-    <div class="brand"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1F5A43"/><path d="M3 25 12.5 10 17.2 17 19.8 13.4 29 25Z" fill="#E9F2EC"/><path d="M12.5 10 15 13.8 13.6 13 12.4 14.4 11.2 13.2 10.2 13.5Z" fill="#B9D3C4"/><path d="M23.2 11.5 26.6 17.3H25.1L27.6 21.8H18.8L21.3 17.3H19.8Z" fill="#2F7556"/><rect x="22.5" y="21.8" width="1.4" height="3.2" fill="#2F7556"/><rect x="3" y="25" width="26" height="1.2" fill="#C9A15A"/></svg>Ballot Path <span class="stamp">OREGON</span></div>
+    <button type="button" class="brand" data-act="openingPage" aria-label="Ballot Path Oregon: go to the opening page"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1F5A43"/><path d="M3 25 12.5 10 17.2 17 19.8 13.4 29 25Z" fill="#E9F2EC"/><path d="M12.5 10 15 13.8 13.6 13 12.4 14.4 11.2 13.2 10.2 13.5Z" fill="#B9D3C4"/><path d="M23.2 11.5 26.6 17.3H25.1L27.6 21.8H18.8L21.3 17.3H19.8Z" fill="#2F7556"/><rect x="22.5" y="21.8" width="1.4" height="3.2" fill="#2F7556"/><rect x="3" y="25" width="26" height="1.2" fill="#C9A15A"/></svg>Ballot Path <span class="stamp">OREGON</span></button>
     <div class="race" id="raceChip"></div>
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-find" data-tab="find"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4a7 7 0 1 0 4.9 12l4.1 4.1" /><circle cx="11" cy="11" r="7"/></svg><span>Find offices</span></button>
@@ -3505,7 +3510,12 @@ const obAnswered = () => { const o = ob(); return !o.browse && (o.issues.length 
 function obWelcome(){
   const cOpts = Object.entries(GEO.counties).sort((a,b) => a[1].n.localeCompare(b[1].n)).map(([f,k]) => `<option value="${f}">${esc(k.n)}</option>`).join('');
   const door = (id, h, p, tag) => `<button class="ob-door" data-obdoor="${id}">${tag ? `<span class="ob-tag">${tag}</span>` : ''}<svg viewBox="0 0 24 24" aria-hidden="true">${OB_ICON[id]}</svg><h2>${h}</h2><p>${p}</p><span class="go">Start →</span></button>`;
-  return `${flowStrip('address')}
+  // Returning visitors: one click back to their offices or their plan. Nothing is cleared by visiting this page.
+  const s = S.intake, where = s.addr && s.addr.tuple ? (s.addrQ || 'your address') : s.zipMode ? `ZIP ${s.zipMode}` : s.browseCounty && GEO.counties[s.browseCounty] ? `${GEO.counties[s.browseCounty].n} County` : '';
+  const race = hasRace() ? ctx().title : '';
+  const resume = where || race ? `<section class="ob-resume"><div><p class="eyebrow">Pick up where you left off</p><p class="note">Your answers, offices, and plan are all still here. Choosing a door below starts a new path without erasing anything.</p></div>
+    <div class="ob-resume-acts">${where ? `<button class="btn" data-obact="resume">Back to your offices · ${esc(where)}</button>` : ''}${race ? `<button class="btn primary" data-tab="road">Open your plan: ${esc(race)}</button>` : ''}</div></section>` : '';
+  return `${flowStrip('address')}${resume}
     <section class="gs-hero"><p class="eyebrow light">Get started</p><h1>Thinking about running for office in Oregon?</h1>
       <p class="gs-lede">You don’t need experience to run for local office. Start wherever you are: just curious, still deciding, or ready to file. You’ll end up with a dated, step-by-step plan for your race.</p></section>
     <div class="ob-doors">
@@ -3702,6 +3712,7 @@ function renderFind(){
   const s = S.intake, zip = (s.zip || '').trim();
   const O = ob();
   if (O.screen === 'commit' && hasRace()){ $('#view-find').innerHTML = obCommit(); return; }
+  if (O.screen === 'welcome'){ $('#view-find').innerHTML = obWelcome(); return; }   // the opening page, even after a search; nothing is cleared
   if (O.screen === 'interview' || O.screen === 'readiness'){
     $('#view-find').innerHTML = O.screen === 'interview' ? obInterview() : obReadiness();
     const z = $('#obZip'); if (z){ z.focus(); z.setSelectionRange(z.value.length, z.value.length); }
@@ -3871,11 +3882,11 @@ function flowStrip(stage){
   const s = S.intake;
   const addrDone = !!(s.addr || s.browseCounty || s.zipMode), officeDone = hasRace();
   const st = [
-    ['Get started', addrDone, 'find', stage === 'address'],
-    ['Office', officeDone, 'find', stage === 'office'],
+    ['Get started', addrDone, 'start', stage === 'address'],
+    ['Office', officeDone || addrDone, 'results', stage === 'office'],
     ['Plan', false, officeDone ? 'road' : '', stage === 'plan'],
   ];
-  return `<ol class="flow" aria-label="Progress">${st.map(([l, done, go, cur], i) => `<li class="${done ? 'done' : ''} ${cur ? 'cur' : ''}">${go ? `<button class="flow-b" data-tab="${go}" ${cur ? 'aria-current="step"' : ''}>` : '<span class="flow-b">'}<span class="flow-n">${done && !cur ? TICK : i + 1}</span>${l}${go ? '</button>' : '</span>'}</li>`).join('')}</ol>`;
+  return `<ol class="flow" aria-label="Progress">${st.map(([l, done, go, cur], i) => `<li class="${done ? 'done' : ''} ${cur ? 'cur' : ''}">${go ? `<button class="flow-b" ${go === 'start' ? 'data-act="openingPage"' : go === 'results' ? 'data-act="toResults"' : `data-tab="${go}"`} ${cur ? 'aria-current="step"' : ''}>` : '<span class="flow-b">'}<span class="flow-n">${done && !cur ? TICK : i + 1}</span>${l}${go ? '</button>' : '</span>'}</li>`).join('')}</ol>`;
 }
 
 /* Tickable actions for each step: the concrete things to do. Steps not listed show their text only. */
@@ -4825,6 +4836,7 @@ function obClick(t){
   if (a === 'clearcmp'){ o.compare = []; o.compareOpen = false; return rf(); }
   if (a === 'all'){ o.showAll = true; return rf(); }
   if (a === 'otheroffice') return goTo(hasCounty() ? 'results' : 'typical');
+  if (a === 'resume') return goTo('results');
   if (a === 'openplan'){ o.screen = 'results'; save(); return setTab('road'); }
 }
 /* Open a step, expand its phase, and bring it into view. */
@@ -4841,6 +4853,9 @@ document.addEventListener('click', async e => {
   const t = e.target.closest('button, tr[data-turf], [data-tab]');
   if (!t) return;
   if (t.dataset.tab){ hideTerm(); return setTab(t.dataset.tab); }
+  // The logo and "Get started" open the opening page; "Office" returns to your results. Neither clears anything.
+  if (t.dataset.act === 'openingPage'){ hideTerm(); ob().screen = 'welcome'; save(); return setTab('find'); }
+  if (t.dataset.act === 'toResults'){ hideTerm(); const o = ob(); o.screen = (S.intake.addr || S.intake.zipMode || S.intake.browseCounty) ? 'results' : (o.screen === 'typical' ? 'typical' : 'welcome'); save(); return setTab('find'); }
   if (t.dataset.term != null){ showTerm(t); return; }
   if (['obdoor','obact','obissue','obtime','obexp','obident','obtype','obready','obcmp','gpick'].some(k => t.dataset[k] !== undefined)) return obClick(t);
   if (t.dataset.tpl) return downloadTpl(t.dataset.tpl, t);
@@ -4977,7 +4992,7 @@ document.addEventListener('change', e => {
   }
   if (t.dataset.q){ const k = t.dataset.q; S.quals = S.quals || {}; S.quals[k] = t.value; save(); renderFind(); const el = $('#' + t.id); if (el) el.focus(); return; }
   if (t.dataset.qc){ S.quals = S.quals || {}; S.quals.creds = S.quals.creds || {}; S.quals.creds[t.dataset.qc] = t.checked; if (t.checked) t.dataset.qc === 'none' ? (S.quals.creds = {none:true}) : delete S.quals.creds.none; S.eligOpen = true; save(); renderFind(); return; }
-  if (t.id === 'browseCounty'){ S.intake.browseCounty = t.value; S.intake.zipMode = ''; S.intake.addr = null; addrMsg = null; if (t.value) S.intake.county = t.value; save(); renderFind(); renderChip(); return; }
+  if (t.id === 'browseCounty'){ if (t.value) ob().screen = 'results'; S.intake.browseCounty = t.value; S.intake.zipMode = ''; S.intake.addr = null; addrMsg = null; if (t.value) S.intake.county = t.value; save(); renderFind(); renderChip(); return; }
   if (t.id === 'findCounty'){ S.intake.county = t.value; S.intake.zip = ''; S.intake.addr = null; addrMsg = null; save(); renderFind(); renderChip(); return; }
   if (t.dataset.sub){ S.sub = S.sub || {}; if (t.checked) S.sub[t.dataset.sub] = true; else delete S.sub[t.dataset.sub]; save(); const id = t.dataset.sub.split('#')[0], items = DO[id] || [], n = items.filter((_, i) => S.sub[id + '#' + i]).length, el = document.getElementById('todo-n-' + id); if (el) el.textContent = n + '/' + items.length; return; }
   if (t.id === 'jumpTo' && t.value){ const id = t.value; if (id.startsWith('phase-')){ const n = id.slice(6); S.collapsed = S.collapsed || {}; S.collapsed[n] = false; save(); renderRoad(); document.getElementById(id)?.scrollIntoView({block:'start'}); } else { const b = document.createElement('button'); b.dataset.scrollto = id.slice(5); b.hidden = true; document.body.appendChild(b); b.click(); b.remove(); } return; }
@@ -5021,7 +5036,7 @@ async function runAddr(){
   addrMsg = 'Looking up your address…'; const n = $('.fi-note'); if (n) n.textContent = addrMsg;
   try {
     const r = await lookupAddress(q, S.intake.zip);
-    if (r.ok){ S.addrEdit = false; S.intake.addr = r; S.intake.county = r.cc; S.intake.browseCounty = ''; S.intake.zipMode = ''; S.intake.isExample = false; addrMsg = {html:`Found it. <button class="linkbtn" data-act="clearAddr">Clear address</button>`}; }
+    if (r.ok){ ob().screen = 'results'; S.addrEdit = false; S.intake.addr = r; S.intake.county = r.cc; S.intake.browseCounty = ''; S.intake.zipMode = ''; S.intake.isExample = false; addrMsg = {html:`Found it. <button class="linkbtn" data-act="clearAddr">Clear address</button>`}; }
     else { S.intake.addr = null; addrMsg = {html: esc(r.err) + (r.cands ? `<span class="cands">${r.cands.map(c => `<button class="pchip" data-cand="${esc(r.n + ' ' + titleCase(c))}">${esc(titleCase(c))}</button>`).join('')}</span>` : '')}; }
   } catch(e){ addrMsg = {html:`Street data couldn’t load. Check your connection and try again, or <button class="linkbtn" data-act="zipOnly">search by ZIP code only</button>.`}; }
   save(); renderFind(); renderChip();
@@ -5034,7 +5049,7 @@ function zipSearch(zip){
   if (!z){ addrMsg = `${zip} isn’t a residential Oregon ZIP code in the Census data. Check it, or browse a county below.`; return renderFind(); }
   const top = z.c.slice().sort((a, b) => b[1] - a[1])[0][0];
   Object.assign(S.intake, {zip, zipMode:zip, addr:null, browseCounty:'', county: z.c.some(x => x[0] === S.intake.county) ? S.intake.county : top, isExample:false});
-  S.addrEdit = false; addrMsg = null; save(); renderFind(); renderChip();
+  S.addrEdit = false; addrMsg = null; ob().screen = 'results'; save(); renderFind(); renderChip();
 }
 async function readFile(input, handler){
   const f = input.files && input.files[0]; input.value = '';
