@@ -642,6 +642,24 @@ span.flow-b{cursor:default;opacity:.7}
 @media (max-width:480px){.res-m{display:none}.todo-res{margin-left:0}}
 button.brand{appearance:none;background:none;border:0;padding:0;margin:0;color:inherit;cursor:pointer;text-align:left}
 button.brand:hover .mark{filter:brightness(1.12)}
+/* "Should I run?" topics: lead, what to expect, questions, what helps, calculator, and summary. */
+.ob-lead{font-size:16px;max-width:66ch;margin-top:8px}
+.ob-expect ul{margin:4px 0 8px;padding-left:20px;display:grid;gap:5px;font-size:14.5px}
+.ob-expect p{font-size:14.5px;color:var(--ink);margin:0 0 8px}
+.ob-expect .tablewrap{margin:4px 0 10px}
+.ob-check{display:grid;gap:6px;padding:12px 0;border-bottom:1px solid var(--rule)}
+.ob-check:last-child{border-bottom:0;padding-bottom:0}
+.ob-check .ob-qtext{font-weight:650;font-size:15px;color:var(--ink);margin:0}
+.ob-check .hint{font-size:13px;color:var(--muted);margin:0}
+.ob-calc{background:var(--sunk);border-radius:var(--r);padding:12px 14px;margin-top:6px;display:grid;gap:10px}
+.ob-calc p{margin:0}
+.ob-calc-row{display:flex;flex-wrap:wrap;gap:10px 16px}
+.ob-calc-row label{display:grid;gap:4px;font-size:12.5px;font-weight:600}
+.ob-calc-row input,.ob-calc-row select{font:inherit;font-weight:400;padding:7px 9px;border:1px solid var(--rule);border-radius:var(--r);background:var(--surface);color:var(--ink);width:150px}
+.ob-calc-out{font-size:14px}
+.ob-sum-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.ob-sum-h h3{margin-right:auto}
+.ob-todos{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14.5px}
 /* "Welcome back" banner for returning visitors: race, progress, next step, and the way back in. */
 .ob-back h1{font-size:clamp(26px,4.4vw,40px)}
 .ob-back .rh-seat{margin:0}
@@ -1079,6 +1097,9 @@ const LINKS = {
   callhub:['CallHub pricing','https://callhub.io/pricing/'],
   polComms:['Political Comms: P2P texting comparison (Jan. 2026)','https://politicalcomms.com/blog/best-p2p-texting-platforms-campaigns/'],
   fccCalls:['FCC: Rules for political campaign calls and texts','https://www.fcc.gov/rules-political-campaign-calls-and-texts'],
+  skSchool:['Salem Reporter: Average Salem-Keizer school board campaign tops $25,000 (2019)','https://www.salemreporter.com/2019/05/21/average-salem-keizer-school-board-campaign-tops-25000/'],
+  ewMoney:['Eugene Weekly: Money Talks, 4J school board races (2021)','https://eugeneweekly.com/2021/05/27/money-talks/'],
+  pipeline24:['Pipeline Fund: Survey of 2024 state and local candidates','https://pipeline.fund/?p=851'],
   cfSearch:['ORESTAR: Candidate filing search','https://secure.sos.state.or.us/orestar/CFSearchPage.do'],
   filerSearch:['ORESTAR: Committee and filer search','https://secure.sos.state.or.us/orestar/GotoSearchByName.do'],
   sosResults:['SOS: Election results and history','https://sos.oregon.gov/elections/Pages/electionhistory.aspx'],
@@ -2366,7 +2387,7 @@ const RES_IC = {
   tab:'<path d="M4 5h16v14H4zM4 9h16"/>',
 };
 const resIcon = k => `<svg class="res-ic" viewBox="0 0 24 24" aria-hidden="true">${RES_IC[k]}</svg>`;
-const hostOf = u => { try { return new URL(u).hostname.split('.').slice(-2).join('.'); } catch (e) { return ''; } };   // main site only: princeton.edu, oregon.gov
+const hostOf = u => { try { const p = new URL(u).hostname.split('.'); return p.slice(p[p.length - 1].length === 2 && p.length > 2 ? -3 : -2).join('.'); } catch (e) { return ''; } };   // main site only: princeton.edu, oregon.gov, state.or.us   // main site only: princeton.edu, oregon.gov
 function resLink(kind, label, title, meta, attrs){
   const inner = `${resIcon(kind)}<span class="res-txt"><span class="res-k">${label}</span><span class="res-t">${title}</span></span><span class="res-m">${meta}</span>`;
   return kind === 'url' ? `<a class="res-link" ${attrs} target="_blank" rel="noopener">${inner}</a>` : `<button type="button" class="res-link" ${attrs}>${inner}</button>`;
@@ -3511,16 +3532,70 @@ const OB_TYPES = {
 };
 const OB_TYPE_ORDER = ['school','special','swcd','city','pcp','mayor','county_comm','county_np','county_judge','da','state_rep','state_sen','boli','state_exec','gov','us_rep','us_sen'];
 const obTypeOf = e => e.office === 'city' && /^Mayor/.test(e.seat || '') ? 'mayor' : e.office;
-const OB_READY = [
-  ['family','Your household is on board','A campaign takes evenings and weekends for months. Have you talked it through with the people you live with?','talk it through with your household'],
-  ['time','You have the time','Local offices take anywhere from a few hours a month to a full-time job, and campaigns get busiest in the six weeks before ballots go out.','block out the time'],
-  ['money','You’re comfortable with the cost','Lost work hours, childcare, travel, and any money you put in yourself. Campaign funds can’t replace lost income.','work out the personal cost'],
-  ['elig','You qualify','Registered to vote, and living in the district for the time the office requires (one year for most local offices).','confirm you qualify'],
-  ['safety','You’ve thought about safety and privacy','Your name and some personal details become public when you file. A safety plan comes first in your plan.','make a safety plan'],
+/* "Help me decide": five topics, one per screen. Each has what to expect (facts the plan's own steps cite), honest questions
+   ([key, question, hint, to-do if not yet]), and what helps (templates, guides, official sources). */
+const OB_TOPICS = [
+  {id:'safety', title:'Safety and public scrutiny', lead:'Running for office is public, and some of it can be ugly, even in races for school boards and water districts. Most of it is words. It’s better to decide now whether you can live with it than to find out in October.',
+   expect:() => `<p><b>What it can look like.</b> Not every race gets all of this, but enough candidates face some of it that you should expect it:</p>
+     <ul><li>A post in a neighborhood group says you’re bought by developers, a union, or outside money, and it spreads faster than you can answer it.</li><li>Someone brings up your divorce, an old debt, a lawsuit, or something you did twenty years ago.</li><li>A clip from a forum, cut mid-sentence, makes it sound like you said the opposite.</li><li>Strangers comment on your looks, religion, or children, and your family hears about you at work and school.</li><li>Emails or voicemails with slurs. Occasionally, a direct threat, or someone posting your home address.</li></ul>
+     <p><b>How common it is.</b> In a 2025 national survey, about half of local officials reported being insulted, more than a third harassed, and about one in six threatened, with higher rates for women. It isn’t all like this: in small races, most of what candidates meet is neighbors glad someone stepped up. <span class="tip-cite">${link('bdiQ3')}</span></p>
+     <p><b>What becomes public.</b> Your name, the office, and your filing. Every contribution and expense, in ORESTAR. Your home address appears on candidate filings unless you ask the filing officer to keep it confidential (form SEL 180), and starting January 1, 2027, ORESTAR stops publishing the home addresses of people connected to committees unless they choose to show them. <span class="tip-cite">${link('sb224')}</span></p>
+     <p><b>What protects you.</b> A PO box, a separate phone number, and removing your address from people-search sites, done before your name is public. Since April 2026, campaign funds can pay reasonable security costs, such as an alarm system, for you and your family. Oregon also lets a candidate sue over knowingly or recklessly false statements of fact, though that’s slow. <span class="tip-cite">${link('hb4017')} ${link('ors260532')}</span></p>`,
+   checks:[['s_lie','Could you read a false claim about yourself in public and keep campaigning the next morning?','Decide in advance who reads your comments and email; it doesn’t have to be you.','decide who reads your comments and email, and which attacks you’ll answer'],
+     ['s_past','Have you looked at what’s public about you, and how you’d explain it?','Court records, old posts, news stories, and property and business records.','look up what’s public about you and write two sentences on anything that could come up'],
+     ['s_family','Are the people you live with ready for strangers to talk about them?','Agree on what stays private, like children’s schools and real-time locations.','agree with your household on what stays private'],
+     ['s_plan','Would you set up a safety plan before your name is public?','A PO box, a campaign phone number, and opt-outs from people-search sites. Most of it is free.','set up a safety plan before you announce']],
+   helps:[{tpl:'privacy'},{tpl:'optout'},{tpl:'threatlog'},{guide:'bridgingdivides'},{guide:'pen.org'}]},
+  {id:'money', title:'Raising money', lead:'Most candidates find asking for money the hardest part. Almost all of it comes from people who already know you, asked directly, one at a time.',
+   expect:() => `<p><b>What races cost.</b> It varies enormously. In Salem-Keizer’s 2019 school board races, candidates averaged over $25,000. In Eugene 4J’s 2021 school board races, candidates for three seats raised nearly $100,000 between them. Many small or uncontested races spend far less, sometimes only a filing fee and a stack of flyers. The best guide is what past candidates for your seat spent, which ORESTAR shows. <span class="tip-cite">${link('skSchool')} ${link('ewMoney')} ${link('filerSearch')}</span></p>
+     <p><b>Who gives.</b> Family, friends, coworkers, neighbors, and groups you belong to, asked by you, for a specific amount. Strangers rarely give to a first-time local candidate. Expect to make the calls yourself; it’s called call time, and most campaigns schedule it every week.</p>
+     <p><b>The rules.</b> Once you raise or spend more than $1,500 in a year, counting your own money, you form a campaign committee and report every contribution and expense in ORESTAR, where anyone can see them. Starting January 1, 2027, Oregon limits how much each person or group can give. Campaign money can never pay you or replace income you lose. <span class="tip-cite">${link('cfManual')}</span></p>
+     <p><b>You won’t be alone in finding it hard.</b> In a 2024 survey of 906 state and local candidates by the Pipeline Fund, a progressive group, 55% said they needed help raising money, and only 23% got it. <span class="tip-cite">${link('pipeline24')}</span></p>
+     ${obCalc()}`,
+   checks:[['m_ask','Could you ask someone you know, directly, for a specific amount like $100?','Naming a number makes it easier for them to say yes.','practice the ask with three close supporters'],
+     ['m_calls','Could you set aside a few hours a week for fundraising calls?','The final months are the busiest.','block out weekly call time'],
+     ['m_public','Are you comfortable with your donors and spending being public?','Every contribution and expense over the reporting threshold is searchable in ORESTAR.','read how Oregon campaign finance reporting works'],
+     ['m_budget','Do you know roughly what races like yours have cost?','Past candidates’ reports in ORESTAR show it.','look up what past candidates for your seat raised and spent']],
+   helps:[{tpl:'calltime'},{tpl:'budget'},{link:'filerSearch'},{link:'cfManual'}]},
+  {id:'time', title:'Time', lead:'Campaigns take the most time in the six weeks before ballots go out, when doors, forums, and turnout all land at once.',
+   expect:() => `<p><b>Rough hours, by race size</b> (estimates from campaign practice; no one has good data):</p>
+     <div class="tablewrap"><table><thead><tr><th>Race</th><th>Early months</th><th>Final 6–8 weeks</th></tr></thead><tbody>
+     <tr><td>Small (special district, small city, often uncontested)</td><td>2–5 hrs/week</td><td>5–10 hrs/week</td></tr>
+     <tr><td>Mid-size (contested council or school board)</td><td>5–10 hrs/week</td><td>15–25 hrs/week</td></tr>
+     <tr><td>Large (county-wide, big city, legislative)</td><td>15–25 hrs/week</td><td>Close to full time</td></tr></tbody></table></div>
+     <p>If you win, the job takes time too: from a few meetings a month on a district board to a full-time county or state office.</p>`,
+   checks:[['t_hours','Can you give the hours a race like yours needs, and more at the end?','Block the time on your calendar before you decide.','block out campaign hours on your calendar'],
+     ['t_work','Can you arrange flexibility with your job?','Public and federal employees have extra rules about campaigning.','talk with your employer about flexibility and any political-activity rules']],
+   helps:[{tpl:'timebudget'}]},
+  {id:'family', title:'Your household and personal cost', lead:'Your family is part of the campaign whether or not they campaign, and running costs you money even when donors pay for the campaign.',
+   expect:() => `<ul><li><b>Time at home:</b> which nights and weekends become campaign time, and who covers childcare, meals, and rides.</li><li><b>Your own money:</b> lost work hours, childcare, travel, and anything you put in yourself. Campaign funds can’t replace lost income; occasional childcare that’s a direct result of campaigning can be paid from campaign funds, and regular paid childcare needs a question to the Elections Division first. <span class="tip-cite">${link('cfManual')}</span></li><li><b>A cap:</b> set a limit on your own money now, at an amount you could lose without regret.</li></ul>`,
+   checks:[['f_talk','Have you talked it through with the people you live with?','What stays protected, and what happens if someone says something cruel about them.','talk it through with your household'],
+     ['f_cost','Can you cover the personal cost for the months of the campaign?','Lost hours, childcare, travel, and your own contribution.','work out the personal cost and set a cap on your own money']],
+   helps:[{tpl:'privacy'},{tpl:'personalcost'}]},
+  {id:'elig', title:'Whether you qualify', lead:'The legal requirements are usually simple, but they’re strict.',
+   expect:() => `<p>Most local offices require being a registered voter who has lived in the district for a year before the election. Some require more: district attorneys must be Oregon State Bar members, and sheriffs need police certification. Federal and some state offices set age and citizenship rules. Find offices checks the requirements for every office once you add your ZIP code.</p>`,
+   checks:[['e_reg','Are you registered to vote at your current address?','Check or update it at oregonvotes.gov.','check or update your voter registration'],
+     ['e_res','Have you lived in the area long enough?','One year is the most common rule for local offices.','confirm the residency rule for the office you choose']],
+   helps:[{link:'myvote'}]},
 ];
+const OB_CHECKS = OB_TOPICS.flatMap(t => t.checks);
 const OB_ICON = {explore:'<path d="M11 4a7 7 0 1 0 4.9 12l4.1 4.1"/><circle cx="11" cy="11" r="7"/>', decide:'<path d="M12 3v18M5 7h14M7 7l-3 7h6zM17 7l-3 7h6z"/>', ready:'<path d="M4 20 10 9l3 5 2-3 5 9z"/><path d="M8 5h3"/>'};
 function ob(){ S.ob = S.ob || {}; const o = S.ob; o.issues = o.issues || []; o.ready = o.ready || {}; o.compare = o.compare || []; return o; }
-const obToDos = () => OB_READY.filter(([k]) => ['no','not'].includes(ob().ready[k]));
+const obToDos = () => OB_CHECKS.filter(([k]) => ['no','not'].includes(ob().ready[k]));
+/* Fundraising calculator: the person's own guesses, never presented as a prediction. */
+function obCalc(){
+  const c = Object.assign({n:'', g:'100', p:'50'}, ob().calc);
+  return `<div class="ob-calc"><p><b>Try it: how much could you raise from people you know?</b></p>
+    <div class="ob-calc-row"><label>People you could ask<input id="obCalcN" type="number" min="0" inputmode="numeric" placeholder="e.g. 60" value="${esc(c.n)}"></label>
+      <label>Typical gift<select id="obCalcG">${['25','50','100','250'].map(v => `<option value="${v}" ${c.g === v ? 'selected' : ''}>$${v}</option>`).join('')}</select></label>
+      <label>Share who say yes<select id="obCalcP">${['25','50','75'].map(v => `<option value="${v}" ${c.p === v ? 'selected' : ''}>${v}%</option>`).join('')}</select></label></div>
+    <p class="ob-calc-out" id="obCalcOut" role="status">${obCalcText(c)}</p></div>`;
+}
+function obCalcText(c){
+  const n = Number(c.n) || 0; if (!n) return 'Enter how many people you could ask. Write the list first; most people find it’s longer than they expect.';
+  const total = Math.round(n * Number(c.p) / 100) * Number(c.g);
+  return `If ${c.p}% of ${n0(n)} people gave about $${c.g}, you’d raise about <b>$${n0(total)}</b> from people you know. These are your own guesses, not a prediction; compare them with what past candidates for your seat spent.`;
+}
 const obQuestions = () => ob().door === 'ready' ? ['type','zip'] : ['issues','time','exp','ident','zip'];
 const obAnswered = () => { const o = ob(); return !o.browse && (o.issues.length || o.time); };
 
@@ -3603,14 +3678,36 @@ function obInterview(){
       <span>${key === 'ident' ? '<button class="linkbtn" data-obact="next">Skip</button> &nbsp; ' : key === 'zip' ? `<button class="linkbtn" data-obact="skipzip">${o.door === 'ready' ? 'I’ll add it later' : 'Skip for now: show typical offices'}</button> &nbsp; ` : ''}<button class="btn primary" data-obact="next" ${ok ? '' : 'disabled'}>${last ? (o.door === 'ready' ? 'Find my seat' : 'See my matches') : 'Continue'} →</button></span></div>
   </section>`;
 }
+function obHelp(h){
+  if (h.tpl){ const T = TEMPLATES.find(t => t.id === h.tpl); return T ? tplRes(T) : ''; }
+  if (h.guide){ const g = GUIDES.find(x => x.url.includes(h.guide)); return g ? guideRes(g) : ''; }
+  if (h.link && LINKS[h.link]) return urlRes(LINKS[h.link][1], LINKS[h.link][0], 'Official source');
+  return '';
+}
+/* One topic per screen, then a summary. S.ob.rstep: 0–4 topics, 5 summary. */
 function obReadiness(){
-  const o = ob(), done = OB_READY.every(([k]) => o.ready[k]), no = obToDos();
-  return `${flowStrip('address')}<section class="ob-rd">
-    <div><p class="eyebrow">Before you choose an office</p><h1 style="font-size:clamp(24px,3.6vw,34px);font-weight:780;font-stretch:86%">Are you ready to run?</h1>
-      <p class="note" style="margin-top:6px">Five honest questions, about you rather than any one office. A “not yet” isn’t a no; your plan shows how to sort each one out.</p></div>
-    ${OB_READY.map(([k, h, p]) => `<div class="ob-rd-item"><h3>${h}</h3><p>${p}</p><div class="ob-chips">${[['yes','Yes'],['not','Not sure yet'],['no','Not yet']].map(([v, l]) => `<button class="ob-chip" data-obready="${k}:${v}" aria-pressed="${o.ready[k] === v}"><span class="ob-ck" aria-hidden="true">${o.ready[k] === v ? '✓' : ''}</span>${l}</button>`).join('')}</div></div>`).join('')}
-    ${done ? (no.length ? `<div class="ob-verdict wait"><h3>${no.length === 1 ? 'One thing' : no.length + ' things'} to sort out first</h3><p>First, ${no.map(x => x[3]).join(', ')}. That’s normal, and your plan will start with ${no.length === 1 ? 'it' : 'them'}. Next, see which offices fit you.</p></div>` : '<div class="ob-verdict"><h3>You look ready</h3><p>Next, see which offices fit what you care about and the time you have.</p></div>') : ''}
-    <div class="ob-nav"><button class="btn quiet" data-obact="home">← Back</button><button class="btn primary" data-obact="tooffices" ${done ? '' : 'disabled'}>See offices that fit →</button></div>
+  const o = ob(), i = Math.min(o.rstep || 0, OB_TOPICS.length), n = OB_TOPICS.length;
+  const head = `<div class="ob-prog"><span>${i < n ? `Topic ${i + 1} of ${n}` : 'Summary'}</span><span class="track"><i style="width:${Math.min(i + 1, n) / n * 100}%"></i></span></div>`;
+  if (i >= n){
+    const rows = OB_TOPICS.map(t => {
+      const todo = t.checks.filter(([k]) => ['no','not'].includes(o.ready[k])), open = t.checks.filter(([k]) => !o.ready[k]);
+      const state = todo.length ? `<span class="ob-bdg first">${todo.length} to sort out</span>` : open.length ? '<span class="ob-bdg">Not answered</span>' : '<span class="ob-bdg fit">Ready</span>';
+      return `<div class="ob-rd-item"><div class="ob-sum-h"><h3>${t.title}</h3>${state}<button class="linkbtn" data-obtopic="${OB_TOPICS.indexOf(t)}">Review</button></div>${todo.length ? `<ul class="ob-todos">${todo.map(x => `<li>${esc(x[3][0].toUpperCase() + x[3].slice(1))}</li>`).join('')}</ul>` : ''}</div>`;
+    }).join('');
+    const no = obToDos();
+    return `${flowStrip('address')}<section class="ob-rd">${head}
+      <div><p class="eyebrow">Should I run?</p><h1 style="font-size:clamp(24px,3.6vw,34px);font-weight:780;font-stretch:86%">${no.length ? `${no.length} thing${no.length === 1 ? '' : 's'} to sort out first` : 'You look ready'}</h1>
+        <p class="note" style="margin-top:6px">${no.length ? 'That’s normal. None of these is a reason not to run; they’re what to do first. They’ll become the first milestone in your plan.' : 'Next, see which offices fit what you care about and the time you have.'}</p></div>
+      ${rows}
+      <div class="ob-nav"><button class="btn quiet" data-obact="rprev">← Back</button><button class="btn primary" data-obact="tooffices">See offices that fit →</button></div></section>`;
+  }
+  const t = OB_TOPICS[i];
+  return `${flowStrip('address')}<section class="ob-rd">${head}
+    <div><p class="eyebrow">Should I run? · ${esc(t.title)}</p><h1 style="font-size:clamp(24px,3.6vw,34px);font-weight:780;font-stretch:86%">${esc(t.title)}</h1><p class="ob-lead">${t.lead}</p></div>
+    <div class="ob-rd-item ob-expect"><h3>What to expect</h3>${t.expect()}</div>
+    <div class="ob-rd-item"><h3>Ask yourself</h3>${t.checks.map(([k, q, hint]) => `<div class="ob-check"><p class="ob-qtext">${q}</p><p class="hint">${hint}</p><div class="ob-chips">${[['yes','Yes'],['not','Not sure yet'],['no','Not yet']].map(([v, l]) => `<button class="ob-chip" data-obready="${k}:${v}" aria-pressed="${o.ready[k] === v}"><span class="ob-ck" aria-hidden="true">${o.ready[k] === v ? '✓' : ''}</span>${l}</button>`).join('')}</div></div>`).join('')}</div>
+    ${t.helps.length ? `<div class="ob-rd-item"><h3>What helps</h3><div class="res-list" style="max-width:none">${t.helps.map(obHelp).join('')}</div></div>` : ''}
+    <div class="ob-nav"><button class="btn quiet" data-obact="rprev">← Back</button><span>${i === 0 ? '' : '<button class="linkbtn" data-obact="rsum">Skip to summary</button> &nbsp; '}<button class="btn primary" data-obact="rnext">${i === n - 1 ? 'See my summary' : 'Next: ' + esc(OB_TOPICS[i + 1].title)} →</button></span></div>
   </section>`;
 }
 /* Fit score: issues the office decides on, whether it fits the time offered, and a nudge toward first races for newcomers. */
@@ -3726,7 +3823,7 @@ function obTypical(){
 /* "You're running": the picked race with its real dates, and any readiness to-dos as the first milestone. */
 function obCommit(){
   const c = ctx(), no = obToDos();
-  const M = [['Decide', no.length ? `First: ${no.map(x => x[3]).join(', ')}. Then a safety plan and locked-down accounts.` : 'Safety plan and accounts locked down', 'Now'],
+  const M = [['Decide', no.length ? `${no.length} thing${no.length === 1 ? '' : 's'} from your readiness check (listed below), then a safety plan and locked-down accounts` : 'Safety plan and accounts locked down', 'Now'],
     ['Get ready', 'Learn the job, size up the race, set up campaign money', c.cyc.opens && daysTo(c.cyc.opens) > 0 ? 'Before ' + fmt(c.cyc.opens) : 'Now'],
     ['File', 'Get on the ballot', 'By ' + fmt(c.cyc.deadline)],
     ['Campaign', 'Message, volunteers, doors, and voters', 'Until ' + fmt(addDays(c.cyc.election, -20))],
@@ -3736,6 +3833,7 @@ function obCommit(){
       <p class="rh-seat">${esc(c.cyc.electionLabel)}, ${fmtW(c.cyc.election)}${S.intake.picked ? '' : ' · dates are typical until you add your county and seat'}</p>
       <p class="rh-desc">Here’s the road from today to the ballot. Your plan breaks each part into steps and marks which ones the law requires.</p></div></div>
     <ol class="ob-miles" aria-label="Milestones">${M.map(([h, d, t], i) => `<li class="ob-mile"><span class="n">${i + 1}</span><span><b>${h}</b><span>${esc(d)}</span></span><time>${esc(t)}</time></li>`).join('')}</ol>
+    ${no.length ? `<div class="ob-rd-item" style="margin-bottom:16px"><div class="ob-sum-h"><h3>First, from your readiness check</h3><button class="linkbtn" data-obtopic="5">Review your answers</button></div><ul class="ob-todos">${no.map(x => `<li>${esc(x[3][0].toUpperCase() + x[3].slice(1))}</li>`).join('')}</ul></div>` : ''}
     <div class="ob-nav"><button class="btn quiet" data-obact="otheroffice">← Choose a different office</button><button class="btn primary" data-obact="openplan">Open my plan →</button></div>
   </section>`;
 }
@@ -4837,13 +4935,14 @@ function obClick(t){
     if (!GEO.zips[z]) return `${z} isn’t a residential Oregon ZIP code in the Census data. Check it, or browse a county from the start page.`;
     o.zip = z; o.zipErr = ''; o.screen = 'results'; o.compareOpen = false; save(); zipSearch(z); window.scrollTo({top:0}); return '';
   };
-  if (d.obdoor) return d.obdoor === 'decide' ? goTo('readiness', {door:'decide', browse:false}) : goTo('interview', {door:d.obdoor, q:0, browse:false});
+  if (d.obdoor) return d.obdoor === 'decide' ? goTo('readiness', {door:'decide', browse:false, rstep:0}) : goTo('interview', {door:d.obdoor, q:0, browse:false});
   if (d.obissue){ o.issues = o.issues.includes(d.obissue) ? o.issues.filter(x => x !== d.obissue) : o.issues.concat(d.obissue); return rf(); }
   if (d.obtime){ o.time = d.obtime; return rf(); }
   if (d.obexp){ o.exp = d.obexp; return rf(); }
   if (d.obident){ o.ident = d.obident; S.intake.ident = OB_IDENT_MAP[d.obident] || ''; return rf(); }
   if (d.obtype){ o.type = d.obtype; return rf(); }
-  if (d.obready){ const [k, v] = d.obready.split(':'); o.ready[k] = v; return rf(); }
+  if (d.obready){ const [k, v] = d.obready.split(':'); o.ready[k] = v; const y = window.scrollY; rf(); window.scrollTo({top:y}); return; }
+  if (d.obtopic !== undefined) return goTo('readiness', {rstep: Number(d.obtopic)});
   if (d.obcmp){ const k = d.obcmp; o.compare = o.compare.includes(k) ? o.compare.filter(x => x !== k) : o.compare.concat(k).slice(-3); return rf(); }
   if (d.gpick){
     const t2 = d.gpick;
@@ -4861,6 +4960,9 @@ function obClick(t){
   if (a === 'browse') return hasCounty() ? goTo('results', {browse:true}) : goTo('typical', {browse:true});
   if (a === 'tointerview') return goTo('interview', {door: o.door === 'decide' ? 'decide' : 'explore', q:0, browse:false});
   if (a === 'tooffices') return goTo('interview', {q:0});
+  if (a === 'rnext') return goTo('readiness', {rstep: Math.min((o.rstep || 0) + 1, OB_TOPICS.length)});
+  if (a === 'rprev') return (o.rstep || 0) > 0 ? goTo('readiness', {rstep: o.rstep - 1}) : goTo('welcome');
+  if (a === 'rsum') return goTo('readiness', {rstep: OB_TOPICS.length});
   if (a === 'edit') return goTo('interview', {q:0});
   if (a === 'home'){ S.ob = {}; Object.assign(S.intake, {zipMode:'', addr:null, browseCounty:''}); save(); renderFind(); renderChip(); window.scrollTo({top:0}); return; }
   if (a === 'zipgo'){ const err = runZip(($('#obZip2') || {}).value); if (err){ const m = $('#obZipErr2'); if (m) m.textContent = err; } return; }
@@ -4891,7 +4993,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.act === 'openingPage'){ hideTerm(); ob().screen = 'welcome'; save(); return setTab('find'); }
   if (t.dataset.act === 'toResults'){ hideTerm(); const o = ob(); o.screen = (S.intake.addr || S.intake.zipMode || S.intake.browseCounty) ? 'results' : (o.screen === 'typical' ? 'typical' : 'welcome'); save(); return setTab('find'); }
   if (t.dataset.term != null){ showTerm(t); return; }
-  if (['obdoor','obact','obissue','obtime','obexp','obident','obtype','obready','obcmp','gpick'].some(k => t.dataset[k] !== undefined)) return obClick(t);
+  if (['obdoor','obact','obissue','obtime','obexp','obident','obtype','obready','obcmp','obtopic','gpick'].some(k => t.dataset[k] !== undefined)) return obClick(t);
   if (t.dataset.tpl) return downloadTpl(t.dataset.tpl, t);
   if (t.dataset.tick){
     const id = t.dataset.tick;
@@ -5054,6 +5156,7 @@ document.addEventListener('input', e => {
   }
   if (t.id === 'baseVotes'){ S.intake.baseVotes = t.value; S.intake.isExample = false; save(); const el = $('#sigSum'); if (el) el.textContent = ctx().sigLine; const h = t.parentElement.querySelector('.hint'); if (h){ const c = ctx(); h.textContent = `Required: ${sigText(c.sig, t.value)}. Source: ${c.sig.cite}.`; } }
   if (t.id === 'addrIn'){ S.intake.addrQ = t.value; save(); return; }
+  if (['obCalcN','obCalcG','obCalcP'].includes(t.id)){ const o = ob(); o.calc = {n:($('#obCalcN') || {}).value || '', g:($('#obCalcG') || {}).value || '100', p:($('#obCalcP') || {}).value || '50'}; save(); const out = $('#obCalcOut'); if (out) out.innerHTML = obCalcText(o.calc); return; }
   if (t.id === 'obZip' || t.id === 'obZip2'){ t.value = t.value.replace(/\D/g, '').slice(0, 5); if (t.id === 'obZip'){ const b = $('.ob-nav .btn.primary'); if (b) b.disabled = !/^\d{5}$/.test(t.value); } return; }
   if (t.dataset.rs){
     const r = Object.assign({}, S.intake.research); if (t.value === '') delete r[t.dataset.rs]; else r[t.dataset.rs] = t.value;
