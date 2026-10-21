@@ -3078,7 +3078,7 @@ function renderFind(){
     const t = A && A.tuple;
     body = `
       <div class="where"><div><p class="eyebrow">${A ? 'Offices for your address' : ZM ? 'Offices for your ZIP code' : 'Every office in the county'}</p><h2>${A ? esc(String(A.n) + ' ' + titleCase(A.street)) : ZM ? `ZIP ${esc(zip)}` : esc(k.n) + ' County'}</h2></div>
-        <span class="note">${A ? `ZIP ${esc(A.zip)} · ${A.approx ? `<b>Approximate match:</b> the nearest numbered range is ${n0(A.gap)} numbers away` : 'Matched to a Census address range'}` : ZM ? `${esc(k.n)} County · about ${n0(ZM.p)} residents (2020 Census) · <button class="linkbtn" data-act="startOver">Start over</button>` : `Showing every district in ${esc(k.n)} County. <button class="linkbtn" data-act="endBrowse">Enter your address instead</button>`}</span></div>
+        <span class="note">${A ? `ZIP ${esc(A.zip)} · ${A.approx ? `<b>Approximate match:</b> the nearest numbered range is ${n0(A.gap)} numbers away` : 'Matched to a Census address range'}` : ZM ? `${esc(k.n)} County · about ${n0(ZM.p)} residents (2020 Census) · <button class="linkbtn" data-act="startOver">Start over</button>` : `Showing every district in ${esc(k.n)} County. <button class="linkbtn" data-act="startOver">Start over</button>`}</span></div>
       ${ZM ? `<div class="flag amber"><b>A ZIP code can cross district lines.</b> These are all the districts that cover part of ZIP ${esc(zip)}; the percentage shows how many of its residents live in each. To see only the offices at your home, add your street address above.${ZM.c.length > 1 ? `<br><span class="zc">This ZIP is in more than one county. County offices shown for: ${ZM.c.map(([cc, p]) => `<button class="pchip ${cc === county ? 'on' : ''}" data-zc="${cc}" aria-pressed="${cc === county}">${esc(GEO.counties[cc].n)} <em>${p < 1 ? '<1' : Math.round(p)}%</em></button>`).join(' ')}</span>` : ''}</div>` : ''}
       ${A ? `<div class="dchips"><span>${esc(k.n)} County</span><span>House District ${esc(t[1])}</span><span>Senate District ${esc(t[2])}</span><span>Congressional District ${esc(t[3])}</span><span>${t[4] ? esc(GEO.cities[t[4]] || t[4]) : 'Outside city limits'}${A.near || A.approx || A.zipNote ? ' (not certain)' : ''}</span>${t[5] ? `<span>${esc(GEO.schools[t[5]] || t[5])}</span>` : ''}${t[6] ? `<span>${esc(GEO.schools[t[6]] || t[6])}</span>` : ''}</div>` : ''}
       ${A && A.zipNote ? `<div class="flag amber"><b>We matched your street in ZIP ${esc(A.zip)}, not the ZIP you entered.</b> The Census data doesn’t list that street under your ZIP, but a street with the same name and house number is in ${esc(A.zip)}. That can be a different town: in testing, about 1 in 5 matches like this put the address in the wrong city. Check that the city and districts below match your voter registration card, or ask ${esc(k.n)} County Elections (${esc(k.phone)}).</div>` : ''}
@@ -3130,7 +3130,7 @@ function renderFind(){
   }
   $('#view-find').innerHTML = `
     ${flowStrip('office')}
-    ${found ? `<div class="panel addr-bar"><span class="note">Your address</span><b>${esc(s.addrQ || '')}</b><span class="note">ZIP ${esc(zip)}</span><button class="linkbtn" data-act="editAddr">Change address</button></div>` : ''}
+    ${found ? `<div class="panel addr-bar"><span class="note">Your address</span><b>${esc(s.addrQ || '')}</b><span class="note">ZIP ${esc(zip)}</span><button class="linkbtn" data-act="editAddr">Change address</button><button class="linkbtn" data-act="startOver">Start over</button></div>` : ''}
     ${form}
     ${body}`;
   fillStreetList(zip);
@@ -3947,7 +3947,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.findview){ S.findView = t.dataset.findview; save(); renderFind(); return; }
   if (t.dataset.cand){ const inp = $('#addrIn'); if (inp) inp.value = t.dataset.cand; return runAddr(); }
   if (t.dataset.act === 'findAddr') return runAddr();
-  if (t.dataset.act === 'startOver'){ Object.assign(S.intake, {zipMode:'', addr:null, addrQ:'', browseCounty:''}); addrMsg = null; save(); renderFind(); renderChip(); return; }
+  if (t.dataset.act === 'startOver'){ S.addrEdit = false; Object.assign(S.intake, {zipMode:'', addr:null, addrQ:'', browseCounty:''}); addrMsg = null; save(); renderFind(); renderChip(); return; }
   if (t.dataset.act === 'zipOnly'){ S.intake.addr = null; return zipSearch(S.intake.zip); }
   if (t.dataset.zc){ S.intake.county = t.dataset.zc; save(); renderFind(); renderChip(); return; }
   if (t.dataset.act === 'endBrowse'){ S.intake.browseCounty = ''; save(); renderFind(); $('#addrIn') && $('#addrIn').focus(); return; }
