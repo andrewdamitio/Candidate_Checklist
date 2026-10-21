@@ -490,6 +490,11 @@ tr.click:hover td{background:var(--sunk)}
 .gs-alt .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .gs-alt select{width:auto;min-width:200px}
 .task{scroll-margin-top:84px}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.danger:hover{background:var(--red-soft)}
+.btn.danger.solid{background:var(--red);color:var(--surface)}
+.reset-box{border:1.5px solid var(--red);background:var(--red-soft);border-radius:var(--r);padding:12px 14px;display:grid;gap:8px}
+.reset-box p{margin:0}
 .fe-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px}
 .fe-steps > div{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--rule);border-radius:var(--r2);padding:16px;box-shadow:var(--shadow)}
 .fe-n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--fir);color:var(--fir-ink);font:600 13px/28px var(--mono);text-align:center}
@@ -2583,6 +2588,7 @@ function renderChip(){
 }
 function setTab(t){
   if (t === 'setup'){ t = 'road'; S.setupOpen = true; }
+  S.resetAsk = false;
   S.tab = t; save();
   $('#view-setup').hidden = true;
   ['find','road','learn','voters','src'].forEach(k => {
@@ -3123,7 +3129,7 @@ function renderFind(){
       <div class="gs-alt">
         <div class="row note"><label for="browseCounty">Rather not enter a ZIP? Browse a whole county:</label> <select id="browseCounty"><option value="">Choose a county</option>${cOpts}</select></div>
         <div class="row note">Already know your race? <button class="linkbtn" data-act="manual">Set it up by hand</button> · New to all this? <button class="linkbtn" data-tab="learn">Learn how Oregon elections work</button></div>
-        <p class="note">Free, with no accounts or tracking. A planning guide, not legal advice: your filing officer has the final word.</p>
+        <p class="note">Free, with no accounts or tracking. Your work saves automatically in this browser; use <b>Save your work</b> on Your plan to keep a copy or move to another device. A planning guide, not legal advice: your filing officer has the final word.</p>
       </div>`;
     fillStreetList(zip);
     return;
@@ -3445,7 +3451,7 @@ function renderRoad(){
     </div>
     <div class="road-toolbar">
       <p class="note"><b>${doneN} of ${all.length}</b> steps done · Phase ${P.indexOf(cur) + 1} of ${P.length}</p>
-      <div class="rt-acts">${jump}<button class="btn small quiet" data-act="dlCal">Dates for your calendar (.csv)</button><button class="btn small quiet" data-act="dlPlan">Save plan to print</button><button class="btn small quiet" data-act="toShare">Share with your team</button></div>
+      <div class="rt-acts">${jump}<button class="btn small quiet" data-act="dlCal">Dates for your calendar (.csv)</button><button class="btn small quiet" data-act="dlPlan">Save plan to print</button><button class="btn small quiet" data-act="saveBackup">Save your work</button><button class="btn small quiet" data-act="toShare">Share or restore</button></div>
       <p class="note rt-msg" id="dlMsg" role="status"></p>
     </div>
     <div class="phases">${phases}</div>
@@ -3900,7 +3906,12 @@ function renderSources(){
       <p class="note" id="fileMsg" role="status"></p>
       <details class="pl-more"><summary>Copy and paste instead</summary>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn small" data-act="copyBackup">Copy backup</button><button class="btn small" data-act="restore">Restore from pasted backup</button></div>
-      <textarea id="backupBox" aria-label="Backup text" placeholder="Paste a backup here to restore"></textarea><p class="note" id="backupMsg" role="status"></p></details></div>`;
+      <textarea id="backupBox" aria-label="Backup text" placeholder="Paste a backup here to restore"></textarea><p class="note" id="backupMsg" role="status"></p></details></div>
+    <div class="panel" id="resetPanel" style="margin-top:16px;display:grid;gap:10px"><p class="eyebrow">Reset everything</p>
+      <p class="note">Erase everything this app has saved in this browser and start fresh: your race, checklist progress, race notes, door results, and the loaded voter file.</p>
+      ${S.resetAsk ? `<div class="reset-box" role="alertdialog" aria-labelledby="resetQ"><p id="resetQ"><b>Erase everything? This can’t be undone.</b> ${S.lastBackup ? `Your last backup file was saved ${esc(new Date(S.lastBackup).toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}))}; anything since then would be lost.` : 'You haven’t saved a backup file yet.'} Save one first if you might want any of it back; you can open it later on the Sources tab.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" data-act="saveBackup">Save a backup file first</button><button class="btn small danger solid" data-act="resetNow">Erase everything</button><button class="btn small quiet" data-act="resetCancel">Cancel</button></div></div>`
+        : `<div><button class="btn small danger" data-act="resetAsk">Reset everything…</button></div>`}</div>`;
 }
 
 /* ================= events ================= */
@@ -4012,7 +4023,22 @@ document.addEventListener('click', async e => {
     t.dataset.armed = '1'; t.textContent = 'Tap again to clear everything';
     setTimeout(() => { if (t.isConnected){ delete t.dataset.armed; t.textContent = 'Clear all results'; } }, 4000); return;
   }
-  if (act === 'saveBackup'){ const m = $('#fileMsg'); const r = await offerFile(`ballot-path-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(backupData()), 'application/json'); if (m) m.textContent = r === 'saved' ? 'Saved. Send the file to a teammate, or keep it as a backup.' : r === 'declined' ? '' : 'This view couldn’t save a file. Use Copy backup below instead.'; return; }
+  if (act === 'saveBackup'){
+    const r = await offerFile(`ballot-path-backup-${new Date().toLocaleDateString('en-CA')}.json`, JSON.stringify(backupData()), 'application/json');
+    if (r === 'saved') S.lastBackup = Date.now(), save();
+    const m = $('#resetPanel .reset-box') ? $('#resetQ') : ($('#fileMsg') || $('#dlMsg'));
+    const ok = S.resetAsk ? '<b>Backup saved.</b> Keep that file somewhere safe. You can still cancel, or erase everything now.' : 'Saved. Keep the file to restore your work later (Sources tab, Open a backup file), or send it to a teammate.';
+    if (m) m.innerHTML = r === 'saved' ? ok : r === 'declined' ? m.innerHTML : 'This view couldn’t save a file. On the Sources tab, use Copy backup instead.';
+    return;
+  }
+  if (act === 'resetAsk'){ S.resetAsk = true; renderSources(); $('#resetPanel')?.scrollIntoView({block:'center'}); $('#resetPanel [data-act="saveBackup"]')?.focus({preventScroll:true}); return; }
+  if (act === 'resetCancel'){ S.resetAsk = false; renderSources(); return; }
+  if (act === 'resetNow'){
+    try { localStorage.removeItem(LS); } catch(err) {}
+    await idbDel('voters');
+    S = JSON.parse(JSON.stringify(DEFAULT)); V = []; META = {source:'none', label:'', hist:[], loadedAt:null}; cache.key = ''; addrMsg = null;
+    save(); setTab('find'); return;
+  }
   if (act === 'openBackup' || act === 'mergeBackup'){ const inp = $('#fileBackup'); inp.dataset.mode = act === 'mergeBackup' ? 'merge' : 'replace'; return inp.click(); }
   if (act === 'toShare'){ setTab('src'); $('#sharePanel')?.scrollIntoView({block:'start'}); return; }
   if (act === 'copyBackup'){ const ok = await copyText(JSON.stringify(backupData()), $('#backupBox')); $('#backupMsg').textContent = ok ? 'Backup copied.' : 'Select the text above and copy it.'; return; }
