@@ -1139,6 +1139,8 @@ const LINKS = {
   signup:['SignUpGenius pricing','https://www.signupgenius.com/pricing'],
   emerge:['Emerge Oregon Signature Program','https://or.emergeamerica.org/training/signature-program'],
   leadInst:['Leadership Institute: Candidate training','https://leadershipinstitute.org/persona/political-candidate-2'],
+  toastmasters:['Toastmasters: Find a club','https://www.toastmasters.org/find-a-club'],
+  tvctv:['Tualatin Valley Community TV','https://tvctv.org/'],
   ors260407:['ORS 260.407 (no personal use of contributions)','https://oregon.public.law/statutes/ors_260.407'],
   ors260532:['ORS 260.532 (false statements about candidates)','https://oregon.public.law/statutes/ors_260.532'],
   ors260550:['ORS 260.550 (use of the word incumbent)','https://oregon.public.law/statutes/ors_260.550'],
@@ -1806,7 +1808,7 @@ function regroup(c, P){
     ['Run the campaign', [
       ...take(['mix']),
       ...G('g-team', 'Build your team', '<p>Campaigns run on a few reliable people and a steady flow of volunteers. Most local campaigns have no paid staff; this section covers who does what, whether to pay anyone, and how to find and keep volunteers.</p>', ['team','staff','recruit','volunteers']),
-      ...G('g-message', 'Message, media, and opponents', '<p>Decide what you’ll say, then say it everywhere voters and reporters look. Know who to call, what reporters expect, and what your opponents are likely to say.</p>', ['message','contacts','photos','press','media','forums','endorse','oppo','attacks']),
+      ...G('g-message', 'Message, media, and opponents', '<p>Decide what you’ll say, then say it everywhere voters and reporters look. Know who to call, what reporters expect, and what your opponents are likely to say.</p>', ['message','contacts','photos','press','media','mediatrain','forums','endorse','oppo','attacks']),
       ...G('g-online', 'Website and social media', '<p>Voters will search your name. Make sure they find something you wrote.</p>', ['web','digital']),
       ...G('g-materials', 'Materials and ads', '<p>Everything you print or pay to put in front of voters: flyers, signs, mail, and any radio or TV. The disclaimer rule comes first because it applies to all of it.</p>', ['disclaim','lit','signs','mail','radio','tv'])]],
     [doorsOn ? 'Voters and door knocking' : 'Voters and field', [
@@ -1893,6 +1895,21 @@ function guideFor(c){
      {p:'REP', n:'Leadership Institute', price:'Cost not listed', d:'Conservative candidate training: Campaign Academy, Future Candidate School, campaign data workshops, and a school board campaign training.', src:['leadInst']},
      {p:'REP', n:'Your Republican county party', d:'County parties run candidate trainings and can tell you how to get access to the party’s voter data.'},
    ], c, 'Options and tools: candidate training')},
+
+  {to:['mediatrain'],
+   how:`<p><b>Before any interview, write down:</b></p><ul><li>Your three points, each with one local proof: a number, a place, or a person’s story you have permission to share.</li><li>Who the reporter is, what they’ve written recently, and their deadline.</li><li>The one sentence you most want in the story.</li></ul>
+     <p><b>On camera:</b> look at the reporter, not the lens, unless it’s a remote interview. Sit forward, keep your hands still and visible, and wear solid colors (no thin stripes or busy patterns). Pause before you answer; silence gets edited out, filler words don’t.</p>
+     <p><b>On the phone or radio:</b> stand up, smile when it fits, and keep answers to about 20 seconds. Have your notes in front of you; nobody can see them.</p>
+     <p><b>After the interview:</b> send any promised fact or figure the same day. If you misspoke, call back right away and correct it. That’s normal, and reporters appreciate it.</p>
+     <p><b>Your own videos:</b> hold the phone sideways for YouTube or a website and upright for Instagram, Facebook Stories, and TikTok. Film near a window, use an inexpensive clip-on microphone, and add captions, since most people watch with the sound off.</p>`,
+   tools: toolList([
+     {p:'any', n:'Toastmasters', price:'Low dues', d:'Nonpartisan public-speaking clubs that meet weekly in most Oregon towns. Good for impromptu speaking (“Table Topics”) and losing filler words.', src:['toastmasters']},
+     {p:'any', n:'Community access TV stations', price:'Often low cost', d:'Several Oregon areas have community media centers that offer studio time and camera training to residents, such as Tualatin Valley Community TV. Ask about their rules for candidates during election season.', src:['tvctv']},
+     {p:'any', n:'GoodParty.org training', price:'Free plan', d:'Includes lessons on messaging and talking to reporters. Built for independent and nonpartisan candidates.', src:['goodparty']},
+     {p:'any', n:'A practice partner', price:'Free', d:'A friend who has worked in news, communications, or debate makes the best mock reporter. Ask them to interrupt and to ask your hardest question twice.'},
+     {p:'DEM', n:'Emerge Oregon and Run for Something', d:'Their candidate trainings for Democrats and progressives include sessions on messaging and media.', src:['emerge']},
+     {p:'REP', n:'Leadership Institute', d:'Conservative training that includes public speaking and media sessions for candidates.', src:['leadInst']},
+   ], c, 'Options and tools: media training')},
 
   {to:['vet'],
    how:`<p><b>Court records come first.</b> Opponents and reporters check them early, and old cases surprise candidates more than anything else. List every court matter you’ve ever been part of, in any state or country, including ones you think are minor or long over:</p>
@@ -2209,6 +2226,16 @@ const TEMPLATES = [
        <p>${TF('Short bio: work, family if you choose, community involvement, and how long you’ve lived in')} ${t.where}.</p>
        <p>Photos and a full bio are available at ${t.web}/press.</p><p style="text-align:center">###</p>
        <p class="hint">Send it as plain text in the body of an email, with one photo attached and a link to your press page.</p>`); }},
+  {id:'mediaprep', title:'Interview prep card', fmt:'Printable page', steps:['mediatrain','media'], stage:'Message',
+   d:'One page to fill in before any interview: your three points with proof, bridge phrases, and your hardest questions.',
+   build(){ const t = tplFacts();
+     return docShell('Interview prep card', `<h1>Interview prep card</h1><p class="hint">${t.name}, running for ${t.office}. Update it before each interview and keep it in front of you on phone and radio calls.</p>
+       <h2>This interview</h2><table><tbody><tr><th>Outlet and reporter</th><td>${TF('Name, outlet, what they covered recently')}</td></tr><tr><th>Format</th><td>${TF('Live or taped, length, phone, studio, or video call')}</td></tr><tr><th>Deadline</th><td>${TF('When they need it')}</td></tr><tr><th>The one sentence I want in the story</th><td>${TF('Your headline')}</td></tr></tbody></table>
+       <h2>My three points</h2><table><thead><tr><th>Point</th><th>Local proof (a number, place, or person)</th></tr></thead><tbody>${[1,2,3].map(n => `<tr><td>${TF('Point ' + n)}</td><td>${TF('Proof')}</td></tr>`).join('')}</tbody></table>
+       <h2>Bridge phrases</h2><ul><li>“What I hear most at the door is…”</li><li>“The bigger question for voters is…”</li><li>“I don’t know yet, and I’ll get you that today. What I do know is…”</li><li>“That’s a fair question. Here’s what I’d do…”</li></ul>
+       <h2>My five hardest questions</h2><table><thead><tr><th>Question</th><th>Short, true answer (under 20 seconds)</th></tr></thead><tbody>${[1,2,3,4,5].map(() => `<tr><td>${TF('Question')}</td><td>${TF('Answer, then bridge to a point')}</td></tr>`).join('')}</tbody></table>
+       <h2>Follow up</h2><p>${TF('Facts or figures I promised to send, and by when')}</p>
+       <p class="hint">Assume everything is on the record unless the reporter agreed otherwise before you spoke.</p>`); }},
   {id:'endorse', title:'Endorsement ask and consent form', fmt:'Printable page', steps:['endorse'], stage:'Message',
    d:'A short request letter and a form that records exactly how each endorser wants to be listed.',
    build(){ const t = tplFacts(), c = t.c, vp = c && c.s.pamphlet === 'yes';
@@ -2369,6 +2396,7 @@ const TPL_USE = {
   message:'Print it or edit it in the browser. Fill in all four squares honestly, including what your opponent will say about you. Then write the three versions of your message and read the one-minute version aloud with a timer.',
   forumprep:'Write a 60-second answer to each question, using the issues from your meeting notes. Practice them aloud, then bring the sheet to forums so your answers match what you told the last group.',
   press:'Edit the highlighted parts in the browser: the date, your contact, two quotes, priorities, and a bio. Paste the text into the body of an email to each reporter on your contact list, with one photo attached.',
+  mediaprep:'Print it or edit it in the browser. Fill in your three points and hardest questions once, then update the top section before each interview. Read your answers aloud with a timer: each should fit in about 20 seconds.',
   endorse:'Send the letter with the consent form attached. When the form comes back, use the name and title exactly as written, only in the places the endorser checked. Keep the signed forms.',
   doorscript:'Print the script for each canvasser and practice it in pairs. Use the voter codes on your walk list, and cut out the “Sorry I missed you” notes to leave on door handles, never in mailboxes.',
   thanks:'Use the language as a starting point, then name the specific gift or work. Handwritten notes sent within two days are remembered; form emails aren’t.',
@@ -2612,10 +2640,26 @@ function mediaStep(c){
     <li><b>If they get something wrong,</b> call politely with the correct fact and a source. Ask for a correction only for real errors.</li></ul>`, {});
 }
 
+function mediaTrainStep(c){
+  const T = c.size ? c.size.tier : 'small', big = c.federal || c.o.statewide, tiny = T === 'tiny';
+  const lead = big
+    ? 'In a race this size you’ll do TV and radio interviews, editorial board meetings, and debates that are broadcast or streamed. Reporters will ask the same hard question several ways. Train before your announcement, not after your first bad clip.'
+    : tiny
+    ? 'Your “media” may be one local paper, a community radio show, and the videos you post yourself. A few hours of practice still pays off: the paper’s story and your own videos are how most voters will first hear you.'
+    : 'Expect interviews with local papers and radio, a newspaper endorsement interview, and short videos for your own social media. A few practice sessions make the difference between sounding nervous and sounding ready.';
+  return step('mediatrain', 'Get media training', `<p>${lead}</p>
+    <ul><li><b>Write your message in three lengths:</b> one sentence, 20 seconds, and one minute. Most quotes and clips that run are 8 to 15 seconds long.</li>
+    <li><b>Learn to bridge.</b> Answer the question briefly and honestly, then connect to one of your three points: “What I hear at the door is…” Don’t dodge; a non-answer becomes the story.</li>
+    <li><b>Prepare for your five hardest questions,</b> including anything you found when you checked your own record. Write short, true answers and say them out loud until they’re calm.</li>
+    <li><b>Practice on camera.</b> Have a friend interview you on a phone for five minutes, then watch it with the sound off (posture, eye contact, fidgeting) and again with only the sound (filler words, pace).</li>
+    <li><b>Know the format before you say yes:</b> live or taped, how long, who else is on, and whether it’s a news interview or an opinion show.</li></ul>
+    <p>${big ? 'At this level many candidates hire a professional media trainer for a session or two, often through their campaign consultant.' : 'You don’t need to pay a trainer. A practice partner, a phone camera, and the options below cover most of it.'}</p>`, {});
+}
+
 /* Rough hours each step takes, for the weekly view. Ongoing work (doors, call time) is marked. Estimates, not measurements. */
 const EST = {reality:.5, household:1, hours:.5, money:1, safety:1, secure:1, quals:.5, partyreg:.25, navreg:.25, seat:.5, learn:10, govt:1, race:1.5, vet:3, scrub:2, pubemp:.25, hatch:.5,
   committee:1, bank:1.5, limits:.5, platform:1, report:1, budget:2, asks:6, houseparty:4, file:1.5, packet:1, prospective:1, nominate:2, sigs:20, early:.5, sei:1, sel180:.25, pamphlet:3,
-  mix:.5, team:2, staff:1, recruit:4, volunteers:2, message:3, photos:3, press:2, forums:6, endorse:4, contacts:2, oppo:4, attacks:1, media:1, web:6, digital:3, disclaim:.5, lit:4, signs:4,
+  mix:.5, team:2, staff:1, recruit:4, volunteers:2, message:3, photos:3, press:2, forums:6, endorse:4, contacts:2, oppo:4, attacks:1, media:1, mediatrain:4, web:6, digital:3, disclaim:.5, lit:4, signs:4,
   mail:4, radio:3, tv:6, votegoal:2, list:1, load:1, doors:30, coord:2, phones:6, gotv:10, eday:2, count:1, rules:.5, ifwin:2, ethics:1, after:3};
 const ONGOING = new Set(['asks','doors','phones','gotv','report','recruit','volunteers','sigs']);
 const estTxt = id => EST[id] == null ? '' : EST[id] < 1 ? `~${Math.round(EST[id] * 60)} min` : `~${EST[id]} hr${EST[id] === 1 ? '' : 's'}${ONGOING.has(id) ? ', ongoing' : ''}`;
@@ -2951,7 +2995,7 @@ function campaignSteps(c){
     {due:addDays(cyc.deadline, -21), dueLabel:'Suggested', verify:'Suggested date: in time for your website and, if you buy a statement, the voters’ pamphlet.'}));
   if (on('forums')) out.push(step('forums', 'Answer questionnaires and show up at forums', `<p>After the filing deadline, groups start asking candidates for answers: endorsing organizations, local newspapers, neighborhood associations, and the League of Women Voters’ VOTE411 guide. Answer every one that’s public, on time, and in your own words, and keep a document of your answers so they stay consistent. Say yes to candidate forums; in local races they’re one of the few places voters compare candidates side by side.</p>`,
     {due:cyc.deadline, dueLabel:'Starts after filing', links:['vote411']}));
-  out.push(contactsStep(c), oppoStep(c), attackStep(c), mediaStep(c));
+  out.push(contactsStep(c), oppoStep(c), attackStep(c), mediaStep(c), mediaTrainStep(c));
   out.push(step('press', 'Tell local news you’re running', `<p>Send a short announcement with a good photo to local papers, community radio, neighborhood newsletters, and any community group lists you’re on. Say what you’re running for, why, and how to reach you. Small outlets often print it nearly as written.</p>`,
     {due:cyc.deadline, dueLabel:'Around filing'}));
   if (on('digital')){
@@ -3012,7 +3056,7 @@ function campaignSteps(c){
   // Chronological: dated steps by their date; undated ones get an anchor date so they land where they belong.
   const start = cyc.opens && daysTo(cyc.opens) > 0 ? cyc.opens : today0();
   const ANCHOR = {mix:addDays(start, -1), pubemp:start, disclaim:start, staff:start, coord:start, volunteers:addDays(start, 1), houseparty:addDays(cyc.deadline, 1), phones:addDays(ballots, -28),
-    contacts:addDays(start, 1), media:addDays(cyc.deadline, -1), oppo:addDays(cyc.deadline, 1), attacks:addDays(cyc.deadline, 2)};
+    contacts:addDays(start, 1), media:addDays(cyc.deadline, -1), mediatrain:addDays(cyc.deadline, -1), oppo:addDays(cyc.deadline, 1), attacks:addDays(cyc.deadline, 2)};
   const when = st => +(st.due || ANCHOR[st.id] || start);
   return out.sort((a, b) => when(a) - when(b) || ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
 }
@@ -4086,6 +4130,7 @@ const DO = {
   oppo:['Pull opponents’ finance reports','Read their record and past statements','Keep a source for every fact'],
   attacks:['Write two sentences on anything in your own record','Decide who approves responses','Save screenshots of attacks with dates'],
   media:['Write your three points','Practice answering with a friend playing reporter','Return every call before deadline'],
+  mediatrain:['Fill in the interview prep card','Write answers to your five hardest questions','Record a practice interview and watch it back','Find a practice partner or training'],
   rules:['Bookmark the complaint form','Know the recount margin and deadline','Keep notes and screenshots of anything that looks like a violation'],
   ethics:['Read the conflict-of-interest rules','Learn the gift limits','Ask for advice when unsure'],
   race:['Find out who holds the seat and whether they’re running again','Write down the votes cast in this race last time','Look up what past candidates raised and spent','Check who has filed'],
@@ -4145,6 +4190,7 @@ const DO_ACT = {
   photos:{0:{tpl:'photorights'}},
   press:{0:{tpl:'contactlist'}, 1:{tpl:'press'}},
   forums:{0:{tpl:'forumprep'}},
+  mediatrain:{0:{tpl:'mediaprep'}},
   endorse:{0:{tpl:'contactlist'}, 2:{tpl:'endorse'}},
   signs:{2:{tpl:'signlog'}, 3:{tpl:'signlog'}},
   contacts:{0:{tpl:'contactlist'}},
@@ -4239,6 +4285,11 @@ const DO_HOW = {
   press:{
     0:'Start from the contact list template, which comes with your county’s member newspapers filled in. Find the reporter who covers your government by checking bylines on recent local government stories, and add community radio and neighborhood newsletters.',
     1:'The press release template is filled in with your race. Add two short quotes and a short bio, and send it as plain text in the body of an email, with one photo attached and a link to your press page.',
+  },
+  mediatrain:{
+    0:'The interview prep card holds your three points, the proof for each, bridge phrases, and your hardest questions on one page. Fill it in once, then update it before each interview.',
+    1:'Include anything from your own record check, the toughest thing an opponent could say, and the issue you know least about. Keep each answer under 20 seconds, and true.',
+    2:'Five minutes on a phone is enough. Watch once with the sound off and once with only the sound, note one thing to fix, and record again.',
   },
   forums:{0:'The forum prep worksheet lists the questions you’re most likely to get, with room for each answer. Write each to about 60 seconds, practice out loud with a friend who interrupts, and keep the sheet so your answers stay consistent everywhere.'},
   endorse:{
